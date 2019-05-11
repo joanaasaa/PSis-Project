@@ -9,5 +9,5 @@
 
 ### Above combination will ignore all files without extension ###
 
-# Specific ti VS Code
+# Specific to VS Code
 .vscode/
