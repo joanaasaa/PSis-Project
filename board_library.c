@@ -1,9 +1,9 @@
 #include "board_library.h"
 
 int dim_board;
-board_place *board;
-int play1[2];
-int n_corrects;
+board_place *board; // Vector alocado onde se encontra guardado o conteúdo de todas as cartas.
+int play1[2]; // Vector onde se guardam os índices da primeira carta escolhida. play1[0]=-1 se ainda não foi escolhida nenhuma carta. 
+int n_corrects; // Guarda o número de cartas que já estão definitivamente viradas para cima.
 
 int linear_conv(int i, int j) {
 	return j*dim_board+i;
@@ -67,12 +67,12 @@ play_response board_play(int x, int y) { // Recebe o índice da carta.
 	play_response resp;
 	resp.code = 10; // Para ser diferente dos valores de 0 a 3 e -2 (ver struct play_response).
 
-	if(strcmp(get_board_place_str(x, y), "")==0) { // Se a string não tem nada.
+	if(strcmp(get_board_place_str(x, y), "")==0) { // Se a carta já está virada para cima.
 		printf("FILLED\n");
     	resp.code =0; // Impossível escolher essa carta.
 	} 
   	else {
-    	if(play1[0]== -1) { // Se for a primera jogada.
+    	if(play1[0]== -1) { // Se foi a primera escolha de carta na jogada.
         	printf("FIRST\n");
         	resp.code =1;
 
@@ -82,7 +82,7 @@ play_response board_play(int x, int y) { // Recebe o índice da carta.
 			resp.play1[1]= play1[1];
 			strcpy(resp.str_play1, get_board_place_str(x, y));
       	}
-		else { // Se não é a primeira jogada.
+		else { // Se não foi a primera escolha de carta na jogada.
 			char *first_str = get_board_place_str(play1[0], play1[1]);
 			char *secnd_str = get_board_place_str(x, y);
 

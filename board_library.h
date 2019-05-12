@@ -6,11 +6,12 @@ typedef struct board_place{
 } board_place; // Para guardar a string de cada lugar no tabuleiro.
 
 typedef struct play_response{
-	int code; 	// 0 - filled (impossibilidade de escolher a carta seleccionada).
-				// 1 - 1st play
-				// 2 2nd - same plays
-				// 3 - END (o jogo termina).
-				// -2 2nd - diffrent
+	int code; // Código que reprensenta a fase da jogada e do jogo.
+		// 0 - Impossibilidade de escolher a carta seleccionada.
+		// 1 - Foi escolhida a 1ª carta da jogada.
+		// 2 - Foi feita a 2ª escolha, as cartas escolhidas são iguais e o jogo continua.
+		// 3 - Foi feita a 2ª escolha, as cartas escolhidas são iguais e o jogo terminou.
+		// -2 - Foi feita a 2ª escolha mas as cartas escolhidas são diferentes.
 	int play1[2], play2[2]; // Índice da carta escolhida da 1ª e 2ª vez.
 	char str_play1[3], str_play2[3]; // String correspondente às cartas escolhidas da 1ª e 2ª vez.
 } play_response;

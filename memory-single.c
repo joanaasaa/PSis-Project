@@ -32,25 +32,28 @@ int main() {
 					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y); // Imprime na consola as coordenadas do rato e a que carta correspondem.
 					play_response resp = board_play(board_x, board_y); 
 					switch(resp.code) {
-						case(1):
-							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100);
-							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 200, 200, 200);
+						case(1): // Foi a primeira escolha de uma jogada.
+							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 200, 200, 200); // Pinta as letras de cinzento.
 							break;
-						case(3):
+						case(3): // O jogo terminou.
 							done = 1;
-						case(2):
-							paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
-							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
-							paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
-							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 0, 0, 0);
+						case(2): // The play's 2nd choice was made. The cards matched but the game still goes on.
+							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0); // Pinta as letras a preto.
+							paint_card(resp.play2[0], resp.play2[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
+							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 0, 0, 0); // Pinta as letras a preto.
 							break;
 						case(-2):
-							paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
-							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 0, 0);
-							paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
-							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 0, 0);
-							sleep(2);
-							paint_card(resp.play1[0], resp.play1[1] , 255, 255, 255);
+							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 0, 0); // Pinta as letras a vermelho.
+							paint_card(resp.play2[0], resp.play2[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
+							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 0, 0); // Pinta as letras a vermelho.
+							
+							sleep(2); 
+
+							// Pinta de novo as cartas de branco.
+							paint_card(resp.play1[0], resp.play1[1] , 255, 255, 255); 
 							paint_card(resp.play2[0], resp.play2[1] , 255, 255, 255);
 							break;
 					}
