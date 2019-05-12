@@ -62,9 +62,11 @@ void clear_card(int  board_x, int board_y){
 }
 
 
-void get_board_card(int mouse_x, int mouse_y, int * board_x, int *board_y) {
+void get_board_card(int mouse_x, int mouse_y, int *board_x, int *board_y) {
 	*board_x = mouse_x / col_width;
 	*board_y = mouse_y / row_height;
+
+	// printf("board_x: %d=%d/%d\nboard_y: %d=%d/%d\n", *board_x, mouse_x, col_width, *board_y, mouse_y, row_height);
 }
 
 

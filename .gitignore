@@ -9,5 +9,6 @@
 # Ignores file of type:
 *.exe
 
-# Specific to VS Code
+# Specific files
 .vscode/
+.DS_Store

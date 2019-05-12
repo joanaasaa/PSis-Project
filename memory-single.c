@@ -17,7 +17,7 @@ int main() {
 	}
 
 	create_board_window(300, 300,  4); // Cria a parte gráfica do tabuleiro (SDL).
-	init_board(4); // Cria o conteúdo do tabuleiro (as strings para as cartas).
+	init_board(4); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
 
 	while(!done) {
 		while(SDL_PollEvent(&event)) {
@@ -29,15 +29,15 @@ int main() {
 				case(SDL_MOUSEBUTTONDOWN): {
 					get_board_card(event.button.x, event.button.y, &board_x, &board_y); // Verifica a que carta correspondem as coordenadas.
 
-					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y);
-					play_response resp = board_play(board_x, board_y);
+					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y); // Imprime na consola as coordenadas do rato e a que carta correspondem.
+					play_response resp = board_play(board_x, board_y); 
 					switch(resp.code) {
 						case(1):
 							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100);
 							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 200, 200, 200);
 							break;
 						case(3):
-						  done = 1;
+							done = 1;
 						case(2):
 							paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
 							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
