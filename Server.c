@@ -1,5 +1,6 @@
 #include "libraries.h"
 #include "board_library.h"
+#include "UI_library.h"
 
 // card **board;
 
@@ -25,9 +26,22 @@ int main(int argc, char const *argv[])
 		return -1;
 	}
 
-	create_board_window(300, 300,  4); // Cria a parte gráfica do tabuleiro (SDL).
-	init_board(4); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
+	create_board_window(1000, 1000,  26); // Cria a parte gráfica do tabuleiro (SDL).
+	init_board(26); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
 
+	while(!done) {
+		while(SDL_PollEvent(&event)) {
+			switch(event.type) {
+				case(SDL_QUIT): {
+					done = SDL_TRUE;
+					break;
+				}
+				case(SDL_MOUSEBUTTONDOWN): {
+					printf("Click!\n");
+				}
+			}
+		}
+	}
 
 
 
