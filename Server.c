@@ -14,7 +14,8 @@ int main(int argc, char const *argv[])
 	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida.
 	SDL_Event event;
 
-    // int board_size = argumentControl(argc, argv);
+    int board_size = argumentControl(argc, argv);
+    if(board_size == -1) return -1;
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
