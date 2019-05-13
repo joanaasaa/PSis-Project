@@ -8,7 +8,6 @@ int n_ronw_cols;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
-
 void write_card(int  board_x, int board_y, char *text, int r, int g, int b) {
 	SDL_Rect rect;
 

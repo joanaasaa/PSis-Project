@@ -7,3 +7,5 @@ typedef struct player {
 } player;
 
 int argumentControl(int argc, char const *argv[]);
+
+void TCPConnection();
