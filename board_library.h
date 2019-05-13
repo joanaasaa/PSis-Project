@@ -1,12 +1,12 @@
 #include "libraries.h"
 
 // ------- STRUCTS -------
-typedef struct card{
+typedef struct card {
 	char status; 
 	char v[3];
 } card; // Para guardar a informação de cada carta.
 
-typedef struct play_response{
+typedef struct play_response {
 	int code; // Código que reprensenta a fase da jogada e do jogo.
 		// 0 - Impossibilidade de escolher a carta seleccionada.
 		// 1 - Foi escolhida a 1ª carta da jogada.
