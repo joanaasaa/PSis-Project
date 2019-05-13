@@ -9,7 +9,7 @@ SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
 
-void write_card(int  board_x, int board_y, char * text, int r, int g, int b){
+void write_card(int  board_x, int board_y, char *text, int r, int g, int b) {
 	SDL_Rect rect;
 
 	rect.x = board_x * col_width;
@@ -37,7 +37,7 @@ void write_card(int  board_x, int board_y, char * text, int r, int g, int b){
 }
 
 
-void paint_card(int  board_x, int board_y , int r, int g, int b){
+void paint_card(int  board_x, int board_y , int r, int g, int b) {
 	SDL_Rect rect;
 
 	rect.x = board_x * col_width;
@@ -51,14 +51,11 @@ void paint_card(int  board_x, int board_y , int r, int g, int b){
 	SDL_RenderDrawRect(renderer, &rect);
 
 	SDL_RenderPresent(renderer);
-
-
 }
 
 
 void clear_card(int  board_x, int board_y){
 	paint_card(board_x, board_y , 255, 255, 255);
-
 }
 
 
