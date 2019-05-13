@@ -20,7 +20,7 @@ void init_board(int dim) {
 	dim_board= dim;
 	n_corrects = 0;
 	play1[0]= -1;
-	board = malloc(sizeof(card)* dim * dim); // Cria espaço na memória para guardar strings para todos os lugares do tabuleiro.
+	board = malloc(sizeof(card) * dim * dim); // Cria espaço na memória para guardar strings para todos os lugares do tabuleiro.
 
 	for(i=0; i < (dim_board * dim_board); i++) { // Limpa o conteúdo de todas as strings.
 		board[i].v[0] = '\0';
@@ -36,7 +36,7 @@ void init_board(int dim) {
 
 				// Com a localização no tabuleiro, desse lugar, calula o número correspondente no vector board e devolve a respectiva string.
 				str_place = get_card_str(i, j);
-				printf("1) %d %d -%s-\n", i, j, str_place);
+				printf("1)	%d	%d	-%s-\n", i, j, str_place);
 			} while(str_place[0] != '\0'); // Enquanto os lugares no tabuleiro já tiverem uma string associada.
 
 			// Associa-se uma string ao lugar encontrado (que anterioremente não tinha string).
@@ -49,7 +49,7 @@ void init_board(int dim) {
 				i = random()% dim_board;
 				j = random()% dim_board;
 				str_place = get_card_str(i, j);
-				printf("2) %d %d -%s-\n", i, j, str_place);
+				printf("2)	%d	%d	-%s-\n", i, j, str_place);
 			} while(str_place[0] != '\0');
 
 			// Atribui a mesma string a esse lugar.
