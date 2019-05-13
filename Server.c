@@ -1,20 +1,17 @@
 #include "libraries.h"
-#include "Server_library.h"
+#include "player_management.h"
 #include "board_library.h"
 #include "UI_library.h"
 
-int main(int argc, char const *argv[])
-{
-    int done = 0;
-	int board_x, board_y; // Para guardar o lugar no tabuleiro da carta escolhida.
-	SDL_Event event;
+int dim_board;
 
-    // ------- ARGUMENT CONTROL -------
+void argumentControl(int argc, char const *argv[]) {
+    
     if(argc != 2) {
         printf("Unsupported number of arguments!\n");
         exit(-1);
     }
-    int dim_board = atoi(argv[1]);
+    dim_board = atoi(argv[1]);
 	if((!(dim_board & 1)) == 0) // Se o número é ímpar.
 	{
 		printf("You have to choose an even number!\n");
@@ -27,8 +24,21 @@ int main(int argc, char const *argv[])
 	}
     printf("Board size: %dx%d\n", dim_board, dim_board);
 
+	return;
+}
 
-	TCPConnection();
+int main(int argc, char const *argv[])
+{
+    int done = 0;
+	int board_x, board_y; // Para guardar o lugar no tabuleiro da carta escolhida.
+	SDL_Event event;
+	pthread_t listen_threadID;
+
+    argumentControl(argc, argv);
+
+	pthread_create(&listen_threadID, NULL, listenSocket, NULL);
+
+	sleep(20);
 
     // // ------- START GRAPHICS -------
 	// if(SDL_Init(SDL_INIT_VIDEO) < 0) {
