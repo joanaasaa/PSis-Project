@@ -35,6 +35,7 @@ int main(int argc, char const *argv[])
 		printf("TTF_Init: %s\n", TTF_GetError());
 		return -1;
 	}
+
 	create_board_window(1000, 1000,  dim_board); // Cria a parte gráfica do tabuleiro (SDL).
 	
     init_board(dim_board); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
@@ -52,9 +53,6 @@ int main(int argc, char const *argv[])
 			}
 		}
 	}
-	printf("fim\n");
-	close_board_windows();
-
 
 
 
