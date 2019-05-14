@@ -29,16 +29,44 @@ void argumentControl(int argc, char const *argv[]) {
 
 int main(int argc, char const *argv[])
 {
-    int done = 0;
-	int board_x, board_y; // Para guardar o lugar no tabuleiro da carta escolhida.
+    int n;
+	int fd;
+	char str[20];
+	struct sockaddr_in server_addr, client_addr;
+	unsigned int client_addrlen;
+	player *players_aux; 
 	SDL_Event event;
-	pthread_t listen_threadID;
+	pthread_t listenSocketID;
 
     argumentControl(argc, argv);
+	
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(SERVER_PORT);
+	server_addr.sin_addr.s_addr = INADDR_ANY;
 
-	pthread_create(&listen_threadID, NULL, listenSocket, NULL);
+	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
+											// SOCK_STREAM: Stream socket. Connection oriented.
+	if(fd == -1) {
+		perror("socket: ");
+		exit(-1);
+  	}
+  	
+	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
+  	if(n == -1) {
+		perror("bind: ");
+		exit(-1);
+ 	}
+  	printf("Socket created and binded!\n");
+  	listen(fd, 5);
 
-	sleep(20);
+	// Server is listening for clients.
+	while(1)
+	{
+		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
+		addPlayer(newfd);
+	}
+
+	close(fd);
 
     // // ------- START GRAPHICS -------
 	// if(SDL_Init(SDL_INIT_VIDEO) < 0) {

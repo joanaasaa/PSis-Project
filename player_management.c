@@ -1,41 +1,48 @@
 #include "player_management.h"
 
-void *listenSocket(void *arg)
+int nr_players = 0;
+player *players = NULL; // List of in-game players.
+
+void addPlayer(int newfd)
 {
-	int n;
-	int fd, newfd;
-	char str[20];
-	struct sockaddr_in server_addr, client_addr;
-	unsigned int client_addrlen;
+	player *players_aux; 
 	
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(SERVER_PORT);
-	server_addr.sin_addr.s_addr = INADDR_ANY;
+	if(players == NULL) { // If the list is empty, the head is created.
+		players = (player*) malloc(sizeof(player));
+		if(players == NULL) {
+			perror("malloc: ");
+			pthread_exit(NULL);
+		}
 
-	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
-											// SOCK_STREAM: Stream socket. Connection oriented.
-	if (fd == -1) {
-		perror("socket: ");
-		exit(-1);
-  	}
-  	
-	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
-  	if(n == -1) {
-		perror("bind: ");
-		exit(-1);
- 	}
-  	printf("Socket created and binded!\n");
-  	listen(fd, 5);
+		players->next = NULL;
+		players_aux = players;
+	}
+	else { // If the list isn't empty, the new player is inserted at the beginning of the list.
+		players_aux = (player*) malloc(sizeof(player));
+		if(players_aux == NULL) {
+			perror("malloc: ");
+			pthread_exit(NULL);
+		}
 
-	// Server is listening for clients.
+		players_aux->next = players;
+		players = players_aux;
+	}
 
-	newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
+	players_aux->socket = newfd;
+	players_aux->rgb_R = rand() % 255 + 1;
+	players_aux->rgb_G = rand() % 255 + 1;
+	players_aux->rgb_B = rand() % 127 + 128;
 
-	read(newfd, str, sizeof(str));
-	printf("%s\n", str);
+	pthread_create(&(players_aux->threadID), NULL, player_thread, players_aux);
 
-	close(newfd);
-	close(fd);
+	return;
+}
 
-    pthread_exit(0);
+void *player_thread(void *arg)
+{
+	player *me = (player*) arg;
+	
+	printf("joana e a mariana é ok também.\n");
+	
+	pthread_exit(NULL);
 }

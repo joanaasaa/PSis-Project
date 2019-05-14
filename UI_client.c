@@ -3,6 +3,7 @@
 
 int main(int argc, char const *argv[])
 {
+	int n;
 	char str[10];
 	
 	strcpy(str, "ola");
@@ -23,9 +24,10 @@ int main(int argc, char const *argv[])
 	server_addr.sin_port = htons(SERVER_PORT);
 	
 	inet_aton(argv[1], &server_addr.sin_addr); //argv[1] => SERVER_IP
-  	
-  	if( -1 == connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr))){
-		printf("Error connecting\n");
+
+	n = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
+  	if(n == -1){
+		perror("connect: ");
 		exit(-1);
 	}
 
