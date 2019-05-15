@@ -6,6 +6,8 @@ player *players = NULL; // List of in-game players.
 void addPlayer(int newfd)
 {
 	player *players_aux; 
+
+	nr_players++;
 	
 	if(players == NULL) { // If the list is empty, the head is created.
 		players = (player*) malloc(sizeof(player));
@@ -40,9 +42,28 @@ void addPlayer(int newfd)
 
 void *player_thread(void *arg)
 {
+	int dim_board = get_dim_board();
 	player *me = (player*) arg;
-	
-	printf("joana e a mariana é ok também.\n");
+	char str[24];
+	int game = 0; // Variável que indica se um jogo já está a decorrer ou não.
+
+	if(nr_players > 1) // Se tiver pelo menos 2 jogadores, isto é, se o jogo já começou.
+		game = 1;
+
+	strcpy(str, "%d-%d", dim_board, )
+	write(m->socket, str, strlen(str));
+
+	for(int i=0; i<dim_board; i++){
+		for(int j=0; j<dim_board; j++){
+
+			memset(str, 0, 24);
+
+			if (get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
+				strcpy(str, get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
+				write(m->socket, str, strlen(str));
+			}
+		}
+	}
 	
 	pthread_exit(NULL);
 }

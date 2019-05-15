@@ -2,7 +2,7 @@
 
 // ------- STRUCTS -------
 typedef struct card {
-	char status; 
+	char status; // Indica o status da carta: u - up; d - down; l - locked.
 	char v[3];
 } card; // Para guardar a informação de cada carta.
 
@@ -20,8 +20,10 @@ typedef struct play_response {
 // ------- FUNCTIONS -------
 int linear_conv(int i, int j); // Devolve um valor linear, consoante coordenadas dadas.
 
-char *get_card_str(int i, int j); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.
-
 void init_board(int dim); // Para atribuir as strings aos lugares do tabuleiro.
 
 play_response board_play (int x, int y);
+
+int get_dim_board();
+
+char *get_str_send(int i, int j, int r, int g, int b); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.

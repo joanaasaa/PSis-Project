@@ -63,7 +63,7 @@ void init_board(int dim) {
 	}
 }
 
-play_response board_play(int x, int y) { // Recebe o índice da carta. 
+play_response board_play(int x, int y) { // Recebe o índice da carta e verifica a jogada.
 	play_response resp;
 	resp.code = 10; // Para ser diferente dos valores de 0 a 3 e -2 (ver struct play_response).
 
@@ -119,4 +119,20 @@ play_response board_play(int x, int y) { // Recebe o índice da carta.
     }
 
 	return resp; // Retorna a estrura com a info da jogada completa (1ª e 2ª escolhas).
+}
+
+int get_dim_board(){
+	return dim_board;
+}
+
+char *get_str_send(int i, int j, int r, int g, int b) {
+	
+	char *str_send = NULL;
+
+	if( board[i].status == 'u' || board[i].status == 'l' ){
+		str_send = (char*)malloc(sizeof(char) * 24);
+		sprintf(str_send, "%c-%d-%d-%d-%d-%d-%c%c", board[linear_conv(i, j)].status, i, j, r, g, b, board[linear_conv(i, j)].v[0], board[linear_conv(i, j)].v[1]);
+	}	
+
+	return str_send;
 }

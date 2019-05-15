@@ -30,7 +30,7 @@ int main() {
 					get_board_card(event.button.x, event.button.y, &board_x, &board_y); // Verifica a que carta correspondem as coordenadas.
 
 					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y); // Imprime na consola as coordenadas do rato e a que carta correspondem.
-					play_response resp = board_play(board_x, board_y); 
+					play_response resp = board_play(board_x, board_y); // Verifica a jogada.
 					switch(resp.code) {
 						case(1): // Foi a primeira escolha de uma jogada.
 							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100); // Pinta o fundo da carta de verde.
