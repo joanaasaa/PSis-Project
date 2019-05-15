@@ -1,6 +1,21 @@
 #include "libraries.h"
 #include "board_library.h"
 
+card *board; // Tabuleiro do jogador.
+
+void *thread_read(void *arg){
+
+	char str[24];
+
+	read(sock_fd, &str, sizeof(str)); // Recebe uma string do servidor.
+
+	//PEGAR NAS VARIAS INFORMAÇOES DA STRING.
+}
+
+void *thread_write(void *arg){
+	//ENVIAR JOGADAS
+}
+
 int main(int argc, char const *argv[])
 {
 	int n;
@@ -31,9 +46,8 @@ int main(int argc, char const *argv[])
 		exit(-1);
 	}
 
-	write(sock_fd, &str, strlen(str));
-
-	//read(sock_fd, &play_char, sizeof(play_char)); //PÔR AQUI A STRING QUE ELE RECEBE!
+	pthread_create(&(players_aux->threadID), NULL, thread_read, NULL);
+	pthread_create(&(players_aux->threadID), NULL, thread_write, NULL);
 
 	close(sock_fd);
 
