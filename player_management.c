@@ -44,12 +44,12 @@ void *player_thread(void *arg)
 {
 	int dim_board = get_dim_board();
 	player *me = (player*) arg;
-	char str[24];
+	char str[25];
 	int game = 0; // Variável que indica se um jogo já está a decorrer(1) ou não(0).
 
 	if(nr_players > 1) game = 1; // Se tiver pelo menos 2 jogadores, isto é, se o jogo já começou.
 
-	strcpy(str, "%d-%d", dim_board, game);
+	strcpy(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
 	write(m->socket, str, strlen(str));
 
 	for(int i=0; i<dim_board; i++){
