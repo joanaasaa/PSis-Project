@@ -39,8 +39,6 @@ int main(int argc, char const *argv[])
 	pthread_t listenSocketID;
 
     argumentControl(argc, argv);
-
-    //BOARD
 	
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(SERVER_PORT);
