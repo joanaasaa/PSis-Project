@@ -16,7 +16,7 @@ int main() {
 		exit(2);
 	}
 
-	create_board_window(300, 300,  4); // Cria a parte gráfica do tabuleiro (SDL).
+	create_board_window(300, 300, 4); // Cria a parte gráfica do tabuleiro (SDL).
 	init_board(4); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
 
 	while(!done) {

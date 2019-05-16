@@ -1,4 +1,5 @@
 #include "player_management.h"
+#include "board_library.h"
 
 int nr_players = 0;
 player *players = NULL; // List of in-game players.
@@ -49,8 +50,9 @@ void *player_thread(void *arg)
 
 	if(nr_players > 1) game = 1; // Se tiver pelo menos 2 jogadores, isto é, se o jogo já começou.
 
-	strcpy(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
-	write(m->socket, str, strlen(str));
+	//strcpy(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
+	sprintf(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
+	write(me->socket, str, strlen(str));
 
 	for(int i=0; i<dim_board; i++){
 		for(int j=0; j<dim_board; j++){
@@ -59,7 +61,7 @@ void *player_thread(void *arg)
 
 			if (get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
 				strcpy(str, get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
-				write(m->socket, str, strlen(str));
+				write(me->socket, str, strlen(str));
 			}
 		}
 	}

@@ -11,12 +11,15 @@ void argumentControl(int argc, char const *argv[]) {
         printf("Unsupported number of arguments!\n");
         exit(-1);
     }
+
     dim_board = atoi(argv[1]);
+
 	if((!(dim_board & 1)) == 0) // Se o número é ímpar.
 	{
 		printf("You have to choose an even number!\n");
 		exit(-1);
 	}
+
 	if(dim_board > 26)
 	{
 		printf("Board size can't be greater than 26!\n");
@@ -29,6 +32,7 @@ void argumentControl(int argc, char const *argv[]) {
 
 int main(int argc, char const *argv[])
 {
+	int done = 0;
     int n;
 	int fd;
 	char str[20];
@@ -39,7 +43,38 @@ int main(int argc, char const *argv[])
 	pthread_t listenSocketID;
 
     argumentControl(argc, argv);
-	
+
+    // ------- BOARD INITIALIZATION -------
+/*    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+		exit(-1);
+	}
+	if(TTF_Init() == -1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+		exit(2);
+	}
+
+	create_board_window(300, 300, dim_board); // Cria a parte gráfica do tabuleiro (SDL).
+
+    init_board(dim_board); // Cria o conteúdo do tabuleiro (as strings para as cartas). Função apenas lógica (não lida com a biblioteca gráfica).
+
+    while(!done) {
+	 	while(SDL_PollEvent(&event)) {
+	 		switch(event.type) {
+	 			case(SDL_QUIT): {
+	 				done = SDL_TRUE;
+	 				break;
+	 			}
+	 			case(SDL_MOUSEBUTTONDOWN): {
+	 				printf("Click!\n");
+	 			}
+	 		}
+	 	}
+	}*/
+
+
+	// ------- SOCKET CREATION -------
+
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(SERVER_PORT);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
@@ -50,7 +85,7 @@ int main(int argc, char const *argv[])
 		perror("socket: ");
 		exit(-1);
   	}
-  	
+  	 
 	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
   	if(n == -1) {
 		perror("bind: ");
@@ -97,7 +132,7 @@ int main(int argc, char const *argv[])
 	// 	}
 	// }
 
-
+	//close_board_windows();
 
     return 0;
 }
