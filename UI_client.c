@@ -7,11 +7,16 @@ card *board; // Game board stored as an allocated vector.
 
 void *thread_read(void *arg){
 
+	int n;
 	int fd = (int) arg;
 	char str[24];
 
+	printf("fd: %d\n", fd);
+
 	while(1) {
-		read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
+		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
+		printf("read %d: %s\n", n, str);
+		memset(str, 0, sizeof(str));
 	}
 	
 
@@ -35,8 +40,6 @@ int main(int argc, char const *argv[])
 	char str[10];
 	struct sockaddr_in server_addr;
 	pthread_t threadID_read, threadID_write;
-	
-	strcpy(str, "ola");
 
 	if(argc < 2){
     	printf("second argument should be server address\n");
@@ -61,10 +64,15 @@ int main(int argc, char const *argv[])
 		exit(-1);
 	}
 
+	printf("fd: %d\n", fd);
+
 	pthread_create(&threadID_read, NULL, thread_read, (int*) fd);
 	pthread_create(&threadID_write, NULL, thread_write, (int*) fd);
 
-	close(fd);
+	pthread_join(threadID_read, NULL);
+	pthread_join(threadID_write, NULL);
+
+	// close(fd);
 
     return 0;
 }

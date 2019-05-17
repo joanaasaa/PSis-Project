@@ -38,11 +38,12 @@ int main(int argc, char const *argv[])
 	char str[20];
 	struct sockaddr_in server_addr, client_addr;
 	unsigned int client_addrlen;
-	player *players_aux; 
-	SDL_Event event;
 	pthread_t listenSocketID;
+	SDL_Event event;
+	player *players_aux; 
 
     argumentControl(argc, argv);
+	init_board(4);
 
     // ------- BOARD INITIALIZATION -------
 /*    if(SDL_Init(SDL_INIT_VIDEO) < 0) {

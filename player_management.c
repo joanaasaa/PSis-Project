@@ -7,7 +7,7 @@ player *players = NULL; // List of in-game players.
 void addPlayer(int newfd)
 {
 	player *players_aux; 
-
+	
 	nr_players++;
 	
 	if(players == NULL) { // If the list is empty, the head is created.
@@ -43,28 +43,36 @@ void addPlayer(int newfd)
 
 void *player_thread(void *arg)
 {
+	int n;
+	int game = 0; // Indica se o jogo já começou (1), ou não (0).
 	int dim_board = get_dim_board();
-	player *me = (player*) arg;
 	char str[25];
-	int game = 0; // Variável que indica se um jogo já está a decorrer(1) ou não(0).
+	player *me = (player*) arg;
 
-	if(nr_players > 1) game = 1; // Se tiver pelo menos 2 jogadores, isto é, se o jogo já começou.
+	printf("dim_board: %d\n", dim_board);
 
-	//strcpy(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
+	if(nr_players >= 2) game = 1; // Se estiverem pelo menos 2 jogadores ligados, o jogo já começou.
+
 	sprintf(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
-	write(me->socket, str, strlen(str));
+	printf("str: %s\n", str);
+
+	n = write(me->socket, str, strlen(str));
+	printf("wrote %d characters.\n", n);
 
 	for(int i=0; i<dim_board; i++){
 		for(int j=0; j<dim_board; j++){
 
-			memset(str, 0, 24);
+			memset(str, 0, sizeof(str));
 
-			if (get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
+			if(get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
+				printf("aqui\n");
 				strcpy(str, get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
-				write(me->socket, str, strlen(str));
+				printf("str: %s\n", str);
+				n = write(me->socket, str, strlen(str));
+				printf("wrote %d characters.\n", n);
 			}
 		}
 	}
 	
-	pthread_exit(NULL);
+	// pthread_exit(NULL);
 }
