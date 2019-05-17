@@ -1,7 +1,7 @@
 #include "libraries.h"
-#include "player_management.h"
+#include "server_library.h"
 #include "board_library.h"
-#include "UI_library.h"
+#include "graphics_library.h"
 
 int dim_board;
 
@@ -96,8 +96,8 @@ int main(int argc, char const *argv[])
   	listen(fd, 5);
 
 	// Server is listening for clients.
-	while(1)
-	{
+	while(1) {
+		
 		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
 		addPlayer(newfd);
 	}

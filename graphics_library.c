@@ -1,4 +1,4 @@
-#include "UI_library.h"
+#include "graphics_library.h"
 
 int screen_width;
 int screen_height;
@@ -15,7 +15,6 @@ void write_card(int  board_x, int board_y, char *text, int r, int g, int b) {
 	rect.y = board_y * row_height;
 	rect.w = col_width+1;
 	rect.h = row_height+1;
-
 
 	TTF_Font * font = TTF_OpenFont("arial.ttf", row_height);
 

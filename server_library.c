@@ -1,4 +1,4 @@
-#include "player_management.h"
+#include "server_library.h"
 #include "board_library.h"
 
 int nr_players = 0;
@@ -48,8 +48,7 @@ void *player_thread(void *arg)
 	int dim_board = get_dim_board();
 	char str[25];
 	player *me = (player*) arg;
-
-	printf("dim_board: %d\n", dim_board);
+	player *players_aux;
 
 	if(nr_players >= 2) game = 1; // Se estiverem pelo menos 2 jogadores ligados, o jogo já começou.
 
@@ -64,15 +63,28 @@ void *player_thread(void *arg)
 
 			memset(str, 0, sizeof(str));
 
-			if(get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
-				printf("aqui\n");
-				strcpy(str, get_str_send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
+			if(get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // Se esta carta é visível ao cliente (locked ou up).
+				strcpy(str, get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
 				printf("str: %s\n", str);
+				
 				n = write(me->socket, str, strlen(str));
 				printf("wrote %d characters.\n", n);
 			}
 		}
 	}
-	
-	// pthread_exit(NULL);
+
+	while(1) {
+		
+		memset(str, 0, sizeof(str));
+		
+		n = read(me->socket, str, sizeof(str));
+		if(n <= 0) { // If the player disconnected.
+			perror("player socket: ");
+			
+			close(me->socket);
+			
+			
+			pthread_exit(NULL);
+		}
+	}
 }

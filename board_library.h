@@ -26,4 +26,4 @@ play_response board_play (int x, int y);
 
 int get_dim_board();
 
-char *get_str_send(int i, int j, int r, int g, int b); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.
+char *get_str2send(int i, int j, int r, int g, int b); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.

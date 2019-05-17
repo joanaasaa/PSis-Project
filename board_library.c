@@ -125,13 +125,13 @@ int get_dim_board(){
 	return dim_board;
 }
 
-char *get_str_send(int i, int j, int r, int g, int b) {
+char *get_str2send(int i, int j, int r, int g, int b) {
 	
 	char *str_send = NULL;
 
 	if( board[i].status == 'u' || board[i].status == 'l' ){
 		str_send = (char*)malloc(sizeof(char) * 25);
-		sprintf(str_send, "%c-%d-%d-%d-%d-%d-%c%c\n", board[linear_conv(i, j)].status, i, j, r, g, b, board[linear_conv(i, j)].v[0], board[linear_conv(i, j)].v[1]);
+		sprintf(str_send, "%c-%d-%d-%d-%d-%d-%c%c\n", board[linear_conv(i,j)].status, i, j, r, g, b, board[linear_conv(i,j)].v[0], board[linear_conv(i, j)].v[1]);
 	}	
 
 	return str_send;

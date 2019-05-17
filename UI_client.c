@@ -1,5 +1,6 @@
 #include "libraries.h"
-#include "board_library.h"
+#include "client_library.h"
+#include "graphics_library.h"
 #include "UI_library.h"
 
 player_self me; // Player's info.
