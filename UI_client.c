@@ -21,7 +21,7 @@ void *thread_read(void *arg){
 		strcat(buffer, str);
 
 		res_aux = strstr(buffer, "\n");
-		if(res_aux != NULL){
+		while(res_aux != NULL){
 			res_aux++;
 			strcpy(res, res_aux);
 
@@ -36,6 +36,7 @@ void *thread_read(void *arg){
 
 			memset(buffer, 0, sizeof(buffer));
 			strcpy(buffer, res);
+			res_aux = strstr(buffer, "\n");
 		}
 		else return;
 

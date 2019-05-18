@@ -13,7 +13,7 @@ void set_variables(char str){
 
 	}
 	else if(final_msg[0] == 'u' || final_msg[0] == 'd' || final_msg[0] == 'l'){ // Information about the board.
-		while()
+		
 	}
 	else{
 
