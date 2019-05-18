@@ -11,11 +11,15 @@ typedef struct player {
     struct player *next;
 } player;
 
+void set_terminate();
+
 int argumentControl(int argc, char const *argv[]);
 
 void addPlayer(int newfd);
 
 void removePlayer(player *toRemove);
+
+void *stdinSocket_thread(void *arg);
 
 void *listenSocket_thread(void *arg);
 

@@ -3,8 +3,15 @@
 
 int dim_board;
 int nr_players = 0;
+int terminate = 0;
 player *players_head = NULL; // List of in-game players.
 pthread_t endGameID;
+
+void set_terminate()
+{
+	terminate = 1;
+	return;
+}
 
 int argumentControl(int argc, char const *argv[]) {
     
@@ -70,8 +77,6 @@ void addPlayer(int newfd)
 void removePlayer(player *toRemove) {
 	
 	player *players_aux, *players_prev;
-
-	printf("A player disconnected.\n");
 			
 	close(toRemove->socket); // Closing player's socket.
 	
@@ -96,6 +101,22 @@ void removePlayer(player *toRemove) {
 	return;
 }
 
+void *stdinSocket_thread(void *arg)
+{
+	int fd_stdin = 0; // Keyboard's file descriptor.
+	char str[20]; // String for commands from keyboard.
+
+	while(!terminate) {	
+		memset(str, 0, sizeof(str));
+
+		read(fd_stdin, &str, sizeof(str));
+		if(strcmp(str, "exit\n") == 0) pthread_exit(0);
+		else printf("Unsupported order!\n");
+	}
+
+	pthread_exit(0);
+}
+
 void *listenSocket_thread(void *arg)
 {
 	int n; // Aid variable. 
@@ -111,13 +132,15 @@ void *listenSocket_thread(void *arg)
 
 	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
 											// SOCK_STREAM: Stream socket. Connection oriented.
-	if(fd == -1) {
+	if(fd<0) {
 		perror("socket");
 		exit(-1);
   	}
+
+	fcntl(fd, F_SETFL, O_NONBLOCK); // Defines fd as a non-blocking socket.
   	 
 	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
-  	if(n == -1) {
+  	if(n<0) {
 		perror("bind");
 		exit(-1);
  	}
@@ -125,9 +148,24 @@ void *listenSocket_thread(void *arg)
   	printf("Socket created and binded!\n");
   	listen(fd, 5);
 
-	while(1) {	
+	while(!terminate) {	
 		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
-		addPlayer(newfd);
+		if(newfd<0) { // If there was an error accepting the new player.
+			if(errno == EAGAIN || errno == EWOULDBLOCK) { // If the error happened because there was no connection to accept ...
+				continue; // ... the loop continues.
+			}
+			else { // If the error was of another type, the player isn't added to the list of players.
+				perror("accept");
+				printf("Unnable to accept player!\n");
+			}
+		}
+		else addPlayer(newfd);
+	}
+
+	close(fd);
+
+	while(1) {
+		if(nr_players == 0) pthread_exit(0);
 	}
 }
 
@@ -169,7 +207,7 @@ void *player_thread(void *arg)
 		write(me->next->socket, str, strlen(str)); // Tells the second player to start playing.
 	}
 
-	while(1) { // Server waits for player's decesion.
+	while(!terminate) { // Server waits for player's decesion.
 		memset(str, 0, sizeof(str));
 	
 		n = read(me->socket, str, sizeof(str));
@@ -177,6 +215,7 @@ void *player_thread(void *arg)
 			if(errno == EAGAIN || errno == EWOULDBLOCK) //  If there was an error because there wasn't data to be read ...
 				continue; // ... there wasn't actually an error. Loop continues.
 			else { // If the player disconnected (purposefully or otherwise) ...
+				printf("A player disconnected.\n");
 				removePlayer(me); // ... the player is removed from the list of connected players.
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
@@ -200,9 +239,8 @@ void *player_thread(void *arg)
 
 		}
 	}
+
+	printf("A player terminated.\n");
+	removePlayer(me);
+	pthread_exit(0);
 }
-
-/*void *end_game_thread(void *arg)
-{
-
-}*/

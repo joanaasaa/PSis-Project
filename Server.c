@@ -7,30 +7,29 @@ int main(int argc, char const *argv[])
 {
     int n; // Aid variable. 
 	int dim_board; // Board dimension (in cards).
-	int fd_stdin = 0; // Keyboard's file descriptor.
-	char str[20]; // String for commands from keyboard.
-	struct sockaddr_in server_addr, client_addr;
-	unsigned int client_addrlen;
-	pthread_t listenSocketID;
-	player *players_aux; 
+	int server_duration = 1200;
+	pthread_t listenSocketID, stdinSocketID;
+	time_t start_time, aux_time; 
 
     dim_board = argumentControl(argc, argv);
 	init_board(dim_board);
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
-	//pthread_join(listenSocketID, NULL);
-
-	// Server application can be terminated at any time with the command "exit".
+	pthread_create(&stdinSocketID, NULL, stdinSocket_thread, NULL); // Prepares server to wait for commands from keyboard.
+	
+	// Server application can be terminated either by the "exit" command from stdin or when final instant is reached.
+	start_time = time(NULL);
 	while(1) {	
-		memset(str, 0, sizeof(str));
-		read(fd_stdin, &str, sizeof(str));
-		if(strcmp(str, "exit\n") == 0) {
-			
-			// TAKE NECESSARY ACTIONS TO TERMINATE APPLICATION...
+		aux_time = time(NULL);
 
+		if( (pthread_join(stdinSocketID, NULL) == 0) || (aux_time - start_time >= server_duration) ) {
+			set_terminate();
+			break;
 		}
-		else printf("Unsupported order!\n");
 	}
+
+	pthread_join(stdinSocketID, NULL);
+	pthread_join(listenSocketID, NULL);
 
     return 0;
 }
