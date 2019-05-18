@@ -39,9 +39,11 @@ void addPlayer(int newfd)
 
 	players_aux = (player*) malloc(sizeof(player));
 	if(players_aux == NULL) {
-		perror("malloc: ");
+		perror("malloc");
 		pthread_exit(NULL);
 	}
+
+	fcntl(newfd, F_SETFL, O_NONBLOCK); // Defines fd as a non-blocking socket.
 
 	players_aux->socket = newfd;
 	players_aux->rgb_R = rand() % 255 + 1;
@@ -110,13 +112,13 @@ void *listenSocket_thread(void *arg)
 	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
 											// SOCK_STREAM: Stream socket. Connection oriented.
 	if(fd == -1) {
-		perror("socket: ");
+		perror("socket");
 		exit(-1);
   	}
   	 
 	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
   	if(n == -1) {
-		perror("bind: ");
+		perror("bind");
 		exit(-1);
  	}
 
@@ -167,14 +169,20 @@ void *player_thread(void *arg)
 		write(me->next->socket, str, strlen(str)); // Tells the second player to start playing.
 	}
 
-	while(1) {// Server waits for player's decesion.
+	while(1) { // Server waits for player's decesion.
 		memset(str, 0, sizeof(str));
-		
+	
 		n = read(me->socket, str, sizeof(str));
 		if(n <= 0) { // If the player disconnected (purposefully or otherwise) ...
+			if(errno == EAGAIN || errno == EWOULDBLOCK) {
+				printf("aqui\n");
+				continue;
+			}
+			
 			removePlayer(me); // ... removes the player from the list of connected players.
+			
 			if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
-			if(nr_players == 1) { // If there is only one player.
+			if(nr_players == 1) { // If there is only one player left.
 
 				strcpy(str, "winner\n"); // 
 				write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.

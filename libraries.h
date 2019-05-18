@@ -8,6 +8,9 @@
 // Sockets:
 #include <sys/socket.h>
 #include <arpa/inet.h>
+// Flag control:
+#include <fcntl.h> // To set file descriptor flags.
+#include <errno.h> // For error checking.
 // Threads:
 #include <pthread.h>
 // Constants:
