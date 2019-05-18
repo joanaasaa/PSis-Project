@@ -1,7 +1,6 @@
 #include "libraries.h"
 #include "client_library.h"
 #include "graphics_library.h"
-#include "UI_library.h"
 
 player_self me; // Player's info.
 card *board; // Game board stored as an allocated vector.
@@ -38,6 +37,7 @@ void *thread_write(void *arg){
 int main(int argc, char const *argv[])
 {
 	int n;
+	int fd;
 	char str[10];
 	struct sockaddr_in server_addr;
 	pthread_t threadID_read, threadID_write;
@@ -47,7 +47,7 @@ int main(int argc, char const *argv[])
     	exit(-1);
   	}
   	
-  	int fd = socket(AF_INET, SOCK_STREAM, 0);
+	fd = socket(AF_INET, SOCK_STREAM, 0);
 
   	if(fd == -1){
     	perror("socket: ");
