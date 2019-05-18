@@ -121,10 +121,6 @@ play_response board_play(int x, int y) { // Recebe o índice da carta e verifica
 	return resp; // Retorna a estrura com a info da jogada completa (1ª e 2ª escolhas).
 }
 
-int get_dim_board(){
-	return dim_board;
-}
-
 char *get_str2send(int i, int j, int r, int g, int b) {
 	
 	char *str_send = NULL;
