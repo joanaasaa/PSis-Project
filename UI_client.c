@@ -1,6 +1,7 @@
 #include "libraries.h"
 #include "client_library.h"
 #include "graphics_library.h"
+#include "board_library.h"
 
 player_self me; // Player's info.
 card *board; // Game board stored as an allocated vector.

@@ -4,6 +4,7 @@
 int dim_board;
 int nr_players = 0;
 player *players_head = NULL; // List of in-game players.
+pthread_t endGameID;
 
 int argumentControl(int argc, char const *argv[]) {
     
@@ -171,8 +172,14 @@ void *player_thread(void *arg)
 		
 		n = read(me->socket, str, sizeof(str));
 		if(n <= 0) { // If the player disconnected (purposefully or otherwise) ...
-			removePlayer(me); // ... the player from the list of connected players ...
-			if(nr_players <= 1) {
+			removePlayer(me); // ... removes the player from the list of connected players.
+			if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
+			if(nr_players == 1) { // If there is only one player.
+
+				strcpy(str, "winner\n"); // 
+				write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
+
+				//funcao para reiniciar um tabuleiro
 
 				// NOTIFY WINNER (THE LAST CONNECTED PLAYER, IF nr_players=1), TERMINATE GAME AND START ANOTHER ONE.
 
@@ -185,3 +192,8 @@ void *player_thread(void *arg)
 
 	}
 }
+
+/*void *end_game_thread(void *arg)
+{
+
+}*/

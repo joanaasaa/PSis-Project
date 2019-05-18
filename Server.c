@@ -18,6 +18,7 @@ int main(int argc, char const *argv[])
 	init_board(dim_board);
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
+	//pthread_join(listenSocketID, NULL); ------------
 
 	// Server application can be terminated at any time with the command "exit".
 	while(1) {	
