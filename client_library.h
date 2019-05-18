@@ -6,3 +6,11 @@ typedef struct player_self {
     int rgb_G;
     int rgb_B;
 } player_self;
+
+void argumentControl(int argc, char const *argv[]);
+
+void create_socket(const char *server_ip);
+
+void *thread_read(void *arg);
+
+void *thread_write(void *arg);

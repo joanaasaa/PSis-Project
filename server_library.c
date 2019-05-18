@@ -22,7 +22,7 @@ int argumentControl(int argc, char const *argv[]) {
 
     dim_board = atoi(argv[1]);
 
-	if((!(dim_board & 1)) == 0) // Se o número é ímpar.
+	if((!(dim_board & 1)) == 0) // If the number is uneven.
 	{
 		printf("You have to choose an even number!\n");
 		exit(-1);
@@ -49,8 +49,9 @@ void addPlayer(int newfd)
 		perror("malloc");
 		pthread_exit(NULL);
 	}
-
-	fcntl(newfd, F_SETFL, O_NONBLOCK); // Defines fd as a non-blocking socket.
+    
+  	int flags = fcntl(newfd, F_GETFL, 0);
+  	fcntl(newfd, F_SETFL, flags | O_NONBLOCK);
 
 	players_aux->socket = newfd;
 	players_aux->rgb_R = rand() % 255 + 1;
@@ -136,8 +137,9 @@ void *listenSocket_thread(void *arg)
 		perror("socket");
 		exit(-1);
   	}
-
-	fcntl(fd, F_SETFL, O_NONBLOCK); // Defines fd as a non-blocking socket.
+	
+	int flags = fcntl(fd, F_GETFL, 0);
+  	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
   	 
 	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
   	if(n<0) {
@@ -150,10 +152,9 @@ void *listenSocket_thread(void *arg)
 
 	while(!terminate) {	
 		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
-		if(newfd<0) { // If there was an error accepting the new player.
-			if(errno == EAGAIN || errno == EWOULDBLOCK) { // If the error happened because there was no connection to accept ...
+		if(newfd <= 0) { // If there was an error accepting the new player.
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) // If the error happened because there was no connection to accept ...
 				continue; // ... the loop continues.
-			}
 			else { // If the error was of another type, the player isn't added to the list of players.
 				perror("accept");
 				printf("Unnable to accept player!\n");
@@ -164,7 +165,7 @@ void *listenSocket_thread(void *arg)
 
 	close(fd);
 
-	while(1) {
+	while(1) { // Waits for all players to disconnect, before exiting.
 		if(nr_players == 0) pthread_exit(0);
 	}
 }
@@ -212,8 +213,9 @@ void *player_thread(void *arg)
 	
 		n = read(me->socket, str, sizeof(str));
 		if(n <= 0) { // If the player disconnected (purposefully or otherwise) or there was no data to be read.
-			if(errno == EAGAIN || errno == EWOULDBLOCK) //  If there was an error because there wasn't data to be read ...
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) {//  If there was an error because there wasn't data to be read ...
 				continue; // ... there wasn't actually an error. Loop continues.
+			}
 			else { // If the player disconnected (purposefully or otherwise) ...
 				printf("A player disconnected.\n");
 				removePlayer(me); // ... the player is removed from the list of connected players.
@@ -231,7 +233,8 @@ void *player_thread(void *arg)
 				}
 				
 				pthread_exit(NULL); // ... and the thread is terminated.
-			}	
+			}
+			
 		}
 		else { // If there was data read.
 
