@@ -173,31 +173,32 @@ void *player_thread(void *arg)
 		memset(str, 0, sizeof(str));
 	
 		n = read(me->socket, str, sizeof(str));
-		if(n <= 0) { // If the player disconnected (purposefully or otherwise) ...
-			if(errno == EAGAIN || errno == EWOULDBLOCK) {
-				printf("aqui\n");
-				continue;
-			}
+		if(n <= 0) { // If the player disconnected (purposefully or otherwise) or there was no data to be read.
+			if(errno == EAGAIN || errno == EWOULDBLOCK) //  If there was an error because there wasn't data to be read ...
+				continue; // ... there wasn't actually an error. Loop continues.
+			else { // If the player disconnected (purposefully or otherwise) ...
+				removePlayer(me); // ... the player is removed from the list of connected players.
 			
-			removePlayer(me); // ... removes the player from the list of connected players.
-			
-			if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
-			if(nr_players == 1) { // If there is only one player left.
+				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
+				if(nr_players == 1) { // If there is only one player left.
 
-				strcpy(str, "winner\n"); // 
-				write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
+					strcpy(str, "winner\n"); // 
+					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
-				//funcao para reiniciar um tabuleiro
+					//funcao para reiniciar um tabuleiro
 
-				// NOTIFY WINNER (THE LAST CONNECTED PLAYER, IF nr_players=1), TERMINATE GAME AND START ANOTHER ONE.
+					// NOTIFY WINNER (THE LAST CONNECTED PLAYER, IF nr_players=1), TERMINATE GAME AND START ANOTHER ONE.
 
-			}
-			
-			pthread_exit(NULL); // ... and the thread is terminated.
+				}
+				
+				pthread_exit(NULL); // ... and the thread is terminated.
+			}	
 		}
+		else { // If there was data read.
 
-		// INTERPRETS MESSAGE FROM PLAYER...
+			// INTERPRETS MESSAGE FROM PLAYER...
 
+		}
 	}
 }
 
