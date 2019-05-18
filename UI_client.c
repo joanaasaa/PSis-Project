@@ -3,14 +3,13 @@
 #include "graphics_library.h"
 #include "board_library.h"
 
-player_self me; // Player's info.
-card *board; // Game board stored as an allocated vector.
-
 void *thread_read(void *arg){
 
 	int n;
 	int fd = (int) arg;
-	char str[24];
+	char str[100];
+	char buffer[200], final_msg[25], res[100];
+	char *res_aux;
 
 	printf("fd: %d\n", fd);
 
@@ -18,10 +17,31 @@ void *thread_read(void *arg){
 		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
 		printf("read %d: %s\n", n, str);
 		memset(str, 0, sizeof(str));
+
+		strcat(buffer, str);
+
+		res_aux = strstr(buffer, "\n");
+		if(res_aux != NULL){
+			res_aux++;
+			strcpy(res, res_aux);
+
+			int i = 0;
+			while(buffer[i] != '\n'){
+				final_msg[i] = buffer[i];
+				i++;
+			}
+
+			final_msg[i] = '\n';
+			final_msg[i+1] = '\0';
+
+			memset(buffer, 0, sizeof(buffer));
+			strcpy(buffer, res);
+		}
+		else return;
+
 	}
 	
-
-	//PEGAR NAS VARIAS INFORMAÇOES DA STRING.
+	
 }
 
 void *thread_write(void *arg){
