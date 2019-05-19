@@ -1,5 +1,6 @@
 #include "server_library.h"
 #include "board_library.h"
+#include "graphics_library.h"
 
 int dim_board;
 int nr_players = 0;
@@ -58,7 +59,7 @@ void addPlayer(int newfd)
 	players_aux->rgb_R = rand() % 255 + 1;
 	players_aux->rgb_G = rand() % 255 + 1;
 	players_aux->rgb_B = rand() % 127 + 128;
-	players_aux->score = 0;
+	players_aux->score = 0; // Number of pairs.
 	
 	if(players_head == NULL) { // If the list is empty, the head is created.
 		players_aux->next = NULL;
@@ -249,7 +250,7 @@ void *player_thread(void *arg)
 	
 		n = read(me->socket, str, sizeof(str));
 		if(n <= 0) { // If the player disconnected (purposefully or otherwise) or there was no data to be read.
-			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) {//  If there was an error because there wasn't data to be read ...
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) { //  If there was an error because there wasn't data to be read ...
 				continue; // ... there wasn't actually an error. Loop continues.
 			}
 			else { // If the player disconnected (purposefully or otherwise) ...
@@ -258,17 +259,13 @@ void *player_thread(void *arg)
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
 				if(nr_players == 1) { // If there is only one player left.
-					players_head->score++;
 					sprintf(str, "winner-%d\n", players_head->score); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
 					//clear_board();
-					init_board(dim_board);
-
-					//funcao para reiniciar um tabuleiro
-
-					// NOTIFY WINNER (THE LAST CONNECTED PLAYER, IF nr_players=1), TERMINATE GAME AND START ANOTHER ONE.
-
+					close_board_windows(); // GRAPHICS
+					create_board_window(300, 300, dim_board); // GRAPHICS
+					init_board(dim_board); // A new game is initialized.
 				}
 				
 				pthread_exit(NULL); // ... and the thread is terminated.

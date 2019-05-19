@@ -3,7 +3,8 @@
 typedef struct player {
     pthread_t threadID;
     int socket;
-    int score;
+    int score; // Number of pairs in current game.
+    int total_score; // Number of games that this player won.
     int play1[2], play2[2];
     int rgb_R;
     int rgb_G;

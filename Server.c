@@ -8,8 +8,21 @@ int main(int argc, char const *argv[])
     int n; // Aid variable. 
 	int dim_board; // Board dimension (in cards).
 	pthread_t listenSocketID, stdinSocketID, checkTimerID;
+	SDL_Event event; // GRAPHICS
+
+	//-----------------------------------GRAPHICS-----------------------------------
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+		exit(-1);
+	}
+	if(TTF_Init() == -1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+		exit(2);
+	}
+	//------------------------------------------------------------------------------
 
     dim_board = argumentControl(argc, argv);
+    create_board_window(300, 300, dim_board); // GRAPHICS
 	init_board(dim_board);
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
@@ -25,6 +38,8 @@ int main(int argc, char const *argv[])
 	pthread_join(checkTimerID, NULL);
 	pthread_join(stdinSocketID, NULL);
 	pthread_join(listenSocketID, NULL);
+
+	close_board_windows(); // GRAPHICS
 
     return 0;
 }
