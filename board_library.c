@@ -12,6 +12,12 @@ char *get_card_str(int i, int j) {
 	return board[linear_conv(i, j)].v;
 }
 
+void clear_board(){
+	free(board);
+	board = NULL;
+	return;
+}
+
 void init_board(int dim) {
 	int count  = 0;
 	int i, j;

@@ -262,6 +262,9 @@ void *player_thread(void *arg)
 					sprintf(str, "winner-%d\n", players_head->score); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
+					//clear_board();
+					init_board(dim_board);
+
 					//funcao para reiniciar um tabuleiro
 
 					// NOTIFY WINNER (THE LAST CONNECTED PLAYER, IF nr_players=1), TERMINATE GAME AND START ANOTHER ONE.

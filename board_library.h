@@ -20,6 +20,10 @@ typedef struct play_response {
 // ------- FUNCTIONS -------
 int linear_conv(int i, int j); // Devolve um valor linear, consoante coordenadas dadas.
 
+char *get_card_str(int i, int j);
+
+void clear_board();
+
 void init_board(int dim); // Para atribuir as strings aos lugares do tabuleiro.
 
 play_response board_play (int x, int y);
