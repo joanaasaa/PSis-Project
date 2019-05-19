@@ -1,7 +1,9 @@
 #include "client_library.h"
 
 int terminate = 0;
+int game = 0;
 int fd;
+int dim_board = 0;
 player_self me; // Player's info.
 //card *board; // Game board stored as an allocated vector.
 
@@ -43,76 +45,90 @@ void create_socket(const char *server_ip)
 		exit(-1);
 	}
 
-	printf("fd: %d\n", fd);
+	int flags = fcntl(fd, F_GETFL, 0);
+  	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
-	// fcntl(fd, F_SETFL, O_NONBLOCK); // Defines fd as a non-blocking socket.
+	return;
 }
 
-void set_variables(char str){
+void interpret_final_msg(char final_msg) {
 
-	/*
-	if(strcmp(final_msg, "start\n") == 0){ // Start.
-		//COMEÇA A JOGAR.
-	}
-	else if(strcmp(final_msg, "winner\n") == 0){
+	if(game == 0) {
+		if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
+			if(game == 0) { // There+s only one player connected. We have to wait for another one to join.
+				game = 2; // The player has to wait for a "start\n" message.
+				printf("Waiting for a second player...");
+				return;
+			}
 
-	}
-	else if(final_msg[0] == 'u' || final_msg[0] == 'd' || final_msg[0] == 'l'){ // Information about the board.
-		
-	}
-	else{
+			// PRINT INITIAL BOARD ON SCREEN.
 
+		}
+		else return;
 	}
-	*/
+	else if (game == 2) {
+		if(strcmp(final_msg, "start\n") == 0) {
+			game = 1;
+			printf("Start palying!");
+
+			// PRINT INITIAL BOARD ON SCREEN.
+
+		}
+		else return;
+	}
+
+	// The function only gets to here if the game has already started?
+
 }
 
 void *thread_read(void *arg) 
 {
 	int n;
-	//int fd = (int) arg;
 	char str[100];
-	char buffer[200], final_msg[25], res[100];
-	char *res_aux;
+	char *res_aux, buffer[200], final_msg[25], res[100];
 
-	printf("fd: %d\n", fd);
-
-	while(1) {
-		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
-		if(n<=0) { // If there was an error reading.
-			// if(errno == EAGAIN || errno == EWOULDBLOCK) 
-			// 	continue;
-			// else {
-			// 	terminate = 1;
-			// }
-		}
-		printf("read %d: %s\n", n, str);
+	while(!terminate) {
 		memset(str, 0, sizeof(str));
 
-		// strcat(buffer, str);
+		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
+		if(n<=0) { // If there was an error reading.
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) 
+				continue;
+			else {
+				terminate = 1;
+				close(fd);
+				break;
+			}
+		}
+		else {
+			printf("read %d: %s\n", n, str);
+			
+			strcat(buffer, str);
 
-		// res_aux = strstr(buffer, "\n");
-		// while(res_aux != NULL){
-		// 	res_aux++;
-		// 	strcpy(res, res_aux);
+			res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
+			while(res_aux != NULL) { // While there's a message to be read stored in buffer.
+				res_aux++;
+				memset(res, 0, sizeof(res));
+				strcpy(res, res_aux);
 
-		// 	int i = 0;
-		// 	while(buffer[i] != '\n'){
-		// 		final_msg[i] = buffer[i];
-		// 		i++;
-		// 	}
+				memset(final_msg, 0, sizeof(final_msg));
+				for(int i=0; buffer[i] != '\n'; i++) {
+					final_msg[i] = buffer[i];
+				}
+				final_msg[i] = '\n';
+				final_msg[i+1] = '\0';
 
-		// 	final_msg[i] = '\n';
-		// 	final_msg[i+1] = '\0';
+				memset(buffer, 0, sizeof(buffer));
+				strcpy(buffer, res);
 
-		// 	memset(buffer, 0, sizeof(buffer));
-		// 	strcpy(buffer, res);
-		// 	res_aux = strstr(buffer, "\n");
-		// }
+				interpret_final_msg(final_msg);
 
-
+				res_aux = strstr(buffer, "\n");
+			}
+		}
 	}
-	
-	
+
+	pthread_exit(0);
 }
 
 void *thread_write(void *arg)

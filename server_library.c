@@ -153,7 +153,7 @@ void *listenSocket_thread(void *arg)
 	while(!terminate) {	
 		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
 		if(newfd <= 0) { // If there was an error accepting the new player.
-			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) // If the error happened because there was no connection to accept ...
+			if(errno == EAGAIN || errno == EWOULDBLOCK) // If the error happened because there was no connection to accept ...
 				continue; // ... the loop continues.
 			else { // If the error was of another type, the player isn't added to the list of players.
 				perror("accept");
