@@ -57,7 +57,7 @@ void interpret_final_msg(char final_msg[]) {
 		if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
 			if(game == 0) { // There+s only one player connected. We have to wait for another one to join.
 				game = 2; // The player has to wait for a "start\n" message.
-				printf("Waiting for a second player...");
+				printf("Waiting for a second player...\n");
 				return;
 			}
 
@@ -69,7 +69,7 @@ void interpret_final_msg(char final_msg[]) {
 	else if (game == 2) {
 		if(strcmp(final_msg, "start\n") == 0) {
 			game = 1;
-			printf("Start palying!");
+			printf("Start palying!\n");
 
 			// PRINT INITIAL BOARD ON SCREEN.
 
@@ -77,7 +77,7 @@ void interpret_final_msg(char final_msg[]) {
 			//(Para testar o server):
 			int x=2, y=3;
 			char str[30];
-			sprintf(str, "%d-%d-%d-%d-%d\n", x, y, me.rgb_R, me.rgb_G, me.rgb_B);
+			sprintf(str, "%d-%d\n", x, y);
 			printf("str: %s\n", str);
 			write(fd, str, strlen(str));
 			//--------------------------------------------------------------------------
@@ -94,7 +94,7 @@ void *thread_read(void *arg)
 {
 	int n;
 	char str[100];
-	char *res_aux, buffer[200], final_msg[25], res[100];
+	char *res_aux, buffer[200] = "\0", final_msg[25], res[100];
 
 	while(!terminate) {
 		memset(str, 0, sizeof(str));

@@ -241,7 +241,7 @@ void *player_thread(void *arg)
 		memset(str, 0, sizeof(str));
 		strcpy(str, "start\n");
 		write(me->next->socket, str, strlen(str)); // Tells the player who first connected to start playing.
-		write(me->next->socket, str, strlen(str)); // Tells the second player to start playing.
+		write(me->socket, str, strlen(str)); // Tells the second player to start playing.
 	}
 
 	while(!terminate) { // Server waits for player's decesion.
@@ -258,8 +258,8 @@ void *player_thread(void *arg)
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
 				if(nr_players == 1) { // If there is only one player left.
-
-					strcpy(str, "winner\n"); // 
+					players_head->score++;
+					sprintf(str, "winner-%d\n", players_head->score); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
 					//funcao para reiniciar um tabuleiro
@@ -280,18 +280,14 @@ void *player_thread(void *arg)
 			read_message(str);
 			//interpret_final_msg_s(final_msg, &me);
 			printf("1 - (x,y) = %d, %d\n", x, y);
-			printf("1 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
+			printf("1 - Player colors: %d-%d-%d\n", me->rgb_R, me->rgb_G, me->rgb_B);
 
-			int a = sscanf(final_msg, "%d-%d-%d-%d-%d\n", &x, &y, &(me->rgb_R), &(me->rgb_G), &(me->rgb_B));
-			printf("sscanf ESTA A RETORNAR: %d\n", a);
+			printf("final_msg: %s\n", final_msg);
 
-			if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &x, &y, &(me->rgb_R), &(me->rgb_G), &(me->rgb_B)) == 5) {
+			if(sscanf(final_msg, "%d-%d\n", &x, &y) == 2) {
 				printf("2 - (x,y) = %d, %d\n", x, y);
-				printf("2 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
+				printf("2 - Player colors: %d-%d-%d\n", me->rgb_R, me->rgb_G, me->rgb_B);
 			}
-
-			printf("3 - (x,y) = %d, %d\n", x, y);
-			printf("3 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
 				
 		}
 
@@ -304,11 +300,12 @@ void *player_thread(void *arg)
 
 void read_message(char str[])
 {
-	char *res_aux, buffer[200], res[100];
+	char *res_aux, buffer[200] = "\0", res[100];
 	
 	strcat(buffer, str);
 
 	res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
+	
 	while(res_aux != NULL) { // While there's a message to be read stored in buffer.
 		res_aux++;
 		memset(res, 0, sizeof(res));
