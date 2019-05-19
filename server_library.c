@@ -4,8 +4,10 @@
 int dim_board;
 int nr_players = 0;
 int terminate = 0;
+char final_msg[25];
+int x_write, y_write; // Chosen card coordinates to send to every player.
 player *players_head = NULL; // List of in-game players.
-pthread_t endGameID;
+//pthread_t endGameID;
 
 int check_terminate()
 {
@@ -134,7 +136,7 @@ void *stdinSocket_thread(void *arg)
 
 void *checkTimer_thread(void *arg)
 {
-	int server_duration = 5; //1200
+	int server_duration = 1200; // The server will be running for 20 minutes.
 	time_t start_time, aux_time; 
 
 	start_time = time(NULL);
@@ -207,7 +209,8 @@ void *player_thread(void *arg)
 {
 	int n; // Aid variable.
 	int game = 0; // Registers if the game has started (1), or not (0).
-	char str[25]; // String for messages.
+	int x=0, y=0; //Card coordinates received by the player.
+	char str[100]; // String for messages.
 	player *me = (player*) arg;
 
 	sprintf(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
@@ -273,10 +276,55 @@ void *player_thread(void *arg)
 
 			// INTERPRETS MESSAGE FROM PLAYER...
 
+			printf("read %d: %s\n", n, str);
+			read_message(str);
+			//interpret_final_msg_s(final_msg, &me);
+			printf("1 - (x,y) = %d, %d\n", x, y);
+			printf("1 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
+
+			int a = sscanf(final_msg, "%d-%d-%d-%d-%d\n", &x, &y, &(me->rgb_R), &(me->rgb_G), &(me->rgb_B));
+			printf("sscanf ESTA A RETORNAR: %d\n", a);
+
+			if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &x, &y, &(me->rgb_R), &(me->rgb_G), &(me->rgb_B)) == 5) {
+				printf("2 - (x,y) = %d, %d\n", x, y);
+				printf("2 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
+			}
+
+			printf("3 - (x,y) = %d, %d\n", x, y);
+			printf("3 - Player colors: %d-%d-%d\n", me->rgb_B, me->rgb_G, me->rgb_R);
+				
 		}
+
 	}
 
 	printf("A player terminated.\n");
 	removePlayer(me);
 	pthread_exit(0);
+}
+
+void read_message(char str[])
+{
+	char *res_aux, buffer[200], res[100];
+	
+	strcat(buffer, str);
+
+	res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
+	while(res_aux != NULL) { // While there's a message to be read stored in buffer.
+		res_aux++;
+		memset(res, 0, sizeof(res));
+		strcpy(res, res_aux);
+
+		memset(final_msg, 0, sizeof(final_msg));
+		int i=0;
+		for(i=0; buffer[i] != '\n'; i++) {
+			final_msg[i] = buffer[i];
+		}
+		final_msg[i] = '\n';
+		final_msg[i+1] = '\0';
+
+		memset(buffer, 0, sizeof(buffer));
+		strcpy(buffer, res);
+
+		res_aux = strstr(buffer, "\n");
+	}
 }

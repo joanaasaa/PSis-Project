@@ -11,6 +11,8 @@ void argumentControl(int argc, char const *argv[]);
 
 void create_socket(const char *server_ip);
 
+void interpret_final_msg(char final_msg[]);
+
 void *thread_read(void *arg);
 
 void *thread_write(void *arg);

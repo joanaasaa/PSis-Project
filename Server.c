@@ -20,7 +20,6 @@ int main(int argc, char const *argv[])
 	
 	while(1) {
 		if( (check_terminate()) == 1 ) break;
-
 	}
 
 	pthread_join(checkTimerID, NULL);

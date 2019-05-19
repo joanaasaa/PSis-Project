@@ -26,3 +26,5 @@ void *checkTimer_thread(void *arg);
 void *listenSocket_thread(void *arg);
 
 void *player_thread(void *arg);
+
+void read_message(char str[]);

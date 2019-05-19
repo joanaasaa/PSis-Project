@@ -51,7 +51,7 @@ void create_socket(const char *server_ip)
 	return;
 }
 
-void interpret_final_msg(char final_msg) {
+void interpret_final_msg(char final_msg[]) {
 
 	if(game == 0) {
 		if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
@@ -72,6 +72,15 @@ void interpret_final_msg(char final_msg) {
 			printf("Start palying!");
 
 			// PRINT INITIAL BOARD ON SCREEN.
+
+			//--------------------------------------------------------------------------
+			//(Para testar o server):
+			int x=2, y=3;
+			char str[30];
+			sprintf(str, "%d-%d-%d-%d-%d\n", x, y, me.rgb_R, me.rgb_G, me.rgb_B);
+			printf("str: %s\n", str);
+			write(fd, str, strlen(str));
+			//--------------------------------------------------------------------------
 
 		}
 		else return;
@@ -112,7 +121,8 @@ void *thread_read(void *arg)
 				strcpy(res, res_aux);
 
 				memset(final_msg, 0, sizeof(final_msg));
-				for(int i=0; buffer[i] != '\n'; i++) {
+				int i=0;
+				for(i=0; buffer[i] != '\n'; i++) {
 					final_msg[i] = buffer[i];
 				}
 				final_msg[i] = '\n';
@@ -142,4 +152,3 @@ void *thread_write(void *arg)
 
 	pthread_exit(0);
 }
-
