@@ -7,10 +7,9 @@ int terminate = 0;
 player *players_head = NULL; // List of in-game players.
 pthread_t endGameID;
 
-void set_terminate()
+int check_terminate()
 {
-	terminate = 1;
-	return;
+	return terminate;
 }
 
 int argumentControl(int argc, char const *argv[]) {
@@ -104,18 +103,52 @@ void removePlayer(player *toRemove) {
 
 void *stdinSocket_thread(void *arg)
 {
+	int n;
 	int fd_stdin = 0; // Keyboard's file descriptor.
 	char str[20]; // String for commands from keyboard.
 
-	while(!terminate) {	
+	int flags = fcntl(fd_stdin, F_GETFL, 0);
+	fcntl(fd_stdin, F_SETFL, flags | O_NONBLOCK);
+
+	while(!terminate) {
 		memset(str, 0, sizeof(str));
 
-		read(fd_stdin, &str, sizeof(str));
-		if(strcmp(str, "exit\n") == 0) pthread_exit(0);
-		else printf("Unsupported order!\n");
+		n = read(fd_stdin, &str, sizeof(str));
+		if(n<=0){
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) {//  If there was an error because there wasn't data to be read ...
+				continue; // ... there wasn't actually an error. Loop continues.
+			}
+		}
+		else{
+			if(strcmp(str, "exit\n") == 0){
+				terminate = 1;
+				pthread_exit(0);
+			}
+			else printf("Unsupported order!\n");
+		}
+		
 	}
 
+	pthread_exit(NULL);
+}
+
+void *checkTimer_thread(void *arg)
+{
+	int server_duration = 5; //1200
+	time_t start_time, aux_time; 
+
+	start_time = time(NULL);
+
+	while(!terminate){
+		aux_time = time(NULL);
+		if((aux_time - start_time) >= server_duration) {
+			terminate = 1;
+			pthread_exit(0);
+		}	
+	}
+	
 	pthread_exit(0);
+
 }
 
 void *listenSocket_thread(void *arg)
