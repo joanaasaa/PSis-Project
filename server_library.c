@@ -122,8 +122,8 @@ void *stdinSocket_thread(void *arg)
 				continue; // ... there wasn't actually an error. Loop continues.
 			}
 		}
-		else{
-			if(strcmp(str, "exit\n") == 0){
+		else {
+			if(strcmp(str, "exit\n") == 0) {
 				terminate = 1;
 				pthread_exit(0);
 			}
@@ -135,7 +135,7 @@ void *stdinSocket_thread(void *arg)
 	pthread_exit(NULL);
 }
 
-void *checkTimer_thread(void *arg)
+void *checkTimer_thread(void *arg) // AND GRAPHICS
 {
 	int server_duration = 1200; // The server will be running for 20 minutes.
 	time_t start_time, aux_time; 
@@ -210,9 +210,10 @@ void *player_thread(void *arg)
 {
 	int n; // Aid variable.
 	int game = 0; // Registers if the game has started (1), or not (0).
-	int x=0, y=0; //Card coordinates received by the player.
+	int x=-1, y=-1; //Card coordinates received by the player (mouse button x and y).
 	char str[100]; // String for messages.
 	player *me = (player*) arg;
+	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida pelo jogador.
 
 	sprintf(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
 	printf("str: %s\n", str);
@@ -236,7 +237,7 @@ void *player_thread(void *arg)
 		}
 	}
 
-	if((nr_players==2) && (game==0)) { // If there are 2 players connect but the game hasn't yet started ...
+	if((nr_players==2) && (game==0)) { // If there are 2 players connected but the game hasn't yet started ...
 		game = 1; // ... the game starts.
 
 		memset(str, 0, sizeof(str));
@@ -259,12 +260,12 @@ void *player_thread(void *arg)
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
 				if(nr_players == 1) { // If there is only one player left.
-					sprintf(str, "winner-%d\n", players_head->score); // 
+					sprintf(str, "winner\n"); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
 					//clear_board();
-					close_board_windows(); // GRAPHICS
-					create_board_window(300, 300, dim_board); // GRAPHICS
+					//close_board_windows(); // GRAPHICS
+					//create_board_window(300, 300, dim_board); // GRAPHICS
 					init_board(dim_board); // A new game is initialized.
 				}
 				
@@ -272,21 +273,20 @@ void *player_thread(void *arg)
 			}
 			
 		}
-		else { // If there was data read.
-
-			// INTERPRETS MESSAGE FROM PLAYER...
+		else { // If there was data to read.  // INTERPRETS MESSAGE FROM PLAYER...
 
 			printf("read %d: %s\n", n, str);
 			read_message(str);
-			//interpret_final_msg_s(final_msg, &me);
-			printf("1 - (x,y) = %d, %d\n", x, y);
-			printf("1 - Player colors: %d-%d-%d\n", me->rgb_R, me->rgb_G, me->rgb_B);
 
-			printf("final_msg: %s\n", final_msg);
+			if(sscanf(final_msg, "%d-%d\n", &board_x, &board_y) == 2) { // If it received a play from a player the server will now analyse it.
+				printf("2 - (x,y) = %d, %d\n", board_x, board_y);
+				play_response resp = board_play(board_x, board_y); // Verifica a jogada.
 
-			if(sscanf(final_msg, "%d-%d\n", &x, &y) == 2) {
-				printf("2 - (x,y) = %d, %d\n", x, y);
-				printf("2 - Player colors: %d-%d-%d\n", me->rgb_R, me->rgb_G, me->rgb_B);
+				if(resp.code == 0) sprintf(str, "%d-aa\n", resp.code);
+				else if(resp.code == 1) sprintf(str, "%d-%c%c\n", resp.code, resp.str_play1[0], resp.str_play1[1]); // Primeira jogada. (Envia o code e a carta).
+				else sprintf(str, "%d-%c%c\n", resp.code, resp.str_play2[0], resp.str_play2[1]); // Segunda jogada. (Envia o code e a carta).
+				write(me->socket, str, strlen(str)); // Envia o feedback ao jogador.
+
 			}
 				
 		}

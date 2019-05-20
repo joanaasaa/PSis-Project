@@ -69,7 +69,7 @@ void init_board(int dim) {
 	}
 }
 
-play_response board_play(int x, int y) { // Recebe o índice da carta e verifica a jogada.
+play_response  board_play(int x, int y) { // Recebe o índice da carta e verifica a jogada.
 	play_response resp;
 	resp.code = 10; // Para ser diferente dos valores de 0 a 3 e -2 (ver struct play_response).
 

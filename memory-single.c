@@ -4,7 +4,7 @@
 
 int main() {
 	int done = 0;
-	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida.
+	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida...
 	SDL_Event event;
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
