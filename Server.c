@@ -30,7 +30,6 @@ int main(int argc, char const *argv[])
 	pthread_create(&checkTimerID, NULL, checkTimer_thread, NULL);
 	
 	// Server application can be terminated either by the "exit" command from stdin or when final instant is reached.
-	
 	while(1) {
 		if( (check_terminate()) == 1 ) break;
 	}

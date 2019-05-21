@@ -260,7 +260,7 @@ void *player_thread(void *arg)
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
 				if(nr_players == 1) { // If there is only one player left.
-					sprintf(str, "winner\n"); // 
+					sprintf(str, "winner-%d\n", me->score); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
 					//clear_board();
