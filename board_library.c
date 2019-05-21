@@ -75,12 +75,12 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
 
 	if(strcmp(get_card_str(x, y), "")==0) { // Se a carta já está virada para cima.
 		printf("FILLED\n");
-    	resp.code =0; // Impossível escolher essa carta.
+    	resp.code = 0; // Impossível escolher essa carta.
 	} 
   	else {
     	if(play1[0]== -1) { // Se foi a primera escolha de carta na jogada.
         	printf("FIRST\n");
-        	resp.code =1;
+        	resp.code = 1;
 
 			play1[0]=x;
 			play1[1]=y;
@@ -94,7 +94,7 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
 
         	if( (play1[0]==x) && (play1[1]==y) ) { // Se foi escolhida a mesma carta.
 				printf("FILLED\n");
-				resp.code =0; // Impossível escolher essa carta.
+				resp.code = 0; // Impossível escolher essa carta.
         	} 
 			else { // Se foi escolhida uma carta válida.
           		resp.play1[0]= play1[0]; 
@@ -112,12 +112,12 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
 
             		n_corrects += 2; // Actualiza o número de cartas viradas para cima definitivamente.
 
-            		if(n_corrects == dim_board * dim_board) resp.code =3; // Se já todas foram viradas para cima, o jogo termina.
+            		if(n_corrects == dim_board * dim_board) resp.code = 3; // Se já todas foram viradas para cima, o jogo termina.
             		else resp.code =2; // Acertou nas cartas mas o jogo não terminou.
           		}
 				else {
             		printf("INCORRECT");
-            		resp.code = -2; // Não acertaste nas cartas.
+            		resp.code = 4; // Não acertaste nas cartas.
           		}
           		play1[0]= -1; // Faz reset do play1[0] para -1 para sabermos que a próxima jogada será uma 1ª escolha de carta.
         	}
@@ -127,13 +127,13 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
 	return resp; // Retorna a estrura com a info da jogada completa (1ª e 2ª escolhas).
 }
 
-char *get_str2send(int i, int j, int r, int g, int b) {
+char *get_str2send(int i, int j, int r, int g, int b, int board_piece_code) {
 	
 	char *str_send = NULL;
 
 	if( board[i].status == 'u' || board[i].status == 'l' ){
 		str_send = (char*)malloc(sizeof(char) * 25);
-		sprintf(str_send, "%c-%d-%d-%d-%d-%d-%c%c\n", board[linear_conv(i,j)].status, i, j, r, g, b, board[linear_conv(i,j)].v[0], board[linear_conv(i, j)].v[1]);
+		sprintf(str_send, "%d-%c-%d-%d-%d-%d-%d-%c%c\n", board_piece_code, board[linear_conv(i,j)].status, i, j, r, g, b, board[linear_conv(i,j)].v[0], board[linear_conv(i, j)].v[1]);
 	}	
 
 	return str_send;

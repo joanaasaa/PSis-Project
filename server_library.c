@@ -214,8 +214,9 @@ void *player_thread(void *arg)
 	char str[100]; // String for messages.
 	player *me = (player*) arg;
 	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida pelo jogador.
+	int init_msg_code = 5, winner_code = 6, start_code = 7, board_piece_code = 8; // Codes that are used to identify the type of message that the server is sending to the client.
 
-	sprintf(str, "%d-%d-%d-%d-%d\n", dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
+	sprintf(str, "%d-%d-%d-%d-%d-%d\n", init_msg_code, dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
 	printf("str: %s\n", str);
 
 	write(me->socket, str, strlen(str));
@@ -228,7 +229,7 @@ void *player_thread(void *arg)
 				memset(str, 0, sizeof(str));
 
 				if(get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // If the card is visible to the player (up or locked).
-					strcpy(str, get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B));
+					strcpy(str, get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B, board_piece_code));
 					printf("str: %s\n", str);
 					
 					write(me->socket, str, strlen(str));
@@ -241,7 +242,7 @@ void *player_thread(void *arg)
 		game = 1; // ... the game starts.
 
 		memset(str, 0, sizeof(str));
-		strcpy(str, "start\n");
+		sprintf(str, "%d\n", start_code);
 		write(me->next->socket, str, strlen(str)); // Tells the player who first connected to start playing.
 		write(me->socket, str, strlen(str)); // Tells the second player to start playing.
 	}
@@ -260,7 +261,7 @@ void *player_thread(void *arg)
 			
 				if(nr_players <= 1) game = 0; // If there is one or zero players, the game ends.
 				if(nr_players == 1) { // If there is only one player left.
-					sprintf(str, "winner-%d\n", me->score); // 
+					sprintf(str, "%d\n", winner_code); // 
 					write(players_head->socket, str, strlen(str)); // Notify remaining player that he is the winner.
 
 					//clear_board();
@@ -282,7 +283,7 @@ void *player_thread(void *arg)
 				printf("2 - (x,y) = %d, %d\n", board_x, board_y);
 				play_response resp = board_play(board_x, board_y); // Verifica a jogada.
 
-				if(resp.code == 0) sprintf(str, "%d-aa\n", resp.code);
+				if(resp.code == 0) sprintf(str, "%d\n", resp.code);
 				else if(resp.code == 1) sprintf(str, "%d-%c%c\n", resp.code, resp.str_play1[0], resp.str_play1[1]); // Primeira jogada. (Envia o code e a carta).
 				else sprintf(str, "%d-%c%c\n", resp.code, resp.str_play2[0], resp.str_play2[1]); // Segunda jogada. (Envia o code e a carta).
 				write(me->socket, str, strlen(str)); // Envia o feedback ao jogador.

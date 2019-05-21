@@ -13,12 +13,16 @@ char card1[3], card2[3]; // String correspondente às cartas escolhidas da 1ª e
 int card1_index[2] = {-1, -1};
 int card2_index[2] = {-1, -1};
 SDL_Event event;
-int code = 10; // Código que reprensenta a fase da jogada e do jogo.
+int code = 10; // Code used to identify the type of message that was received by the server.
 		// 0 - Impossibilidade de escolher a carta seleccionada.
-		// 1 - Foi escolhida a 1ª carta da jogada.
-		// 2 - Foi feita a 2ª escolha, as cartas escolhidas são iguais e o jogo continua.
-		// 3 - Foi feita a 2ª escolha, as cartas escolhidas são iguais e o jogo terminou.
-		// -2 - Foi feita a 2ª escolha mas as cartas escolhidas são diferentes.
+		// 1 - The 1st card was chosen.
+		// 2 - The 2nd card was chosen, both cards are the same and the game goes on.
+		// 3 - The 2nd card was chosen, both cards are the same and the game ended.
+		// 4 - The 2nd card was chosen, but the cards are not a match.
+		// 5 - Initial message containing the dim_board and other information.
+		// 6 - Message announcing that this player is the winner and its score
+		// 7 - Message announcing that the game just started and the player may start playing.
+		// 8 - Message containing a card turned up in the current board (in case this player joins in the middle of a game).
 
 
 void argumentControl(int argc, char const *argv[]) 
@@ -79,7 +83,7 @@ void interpret_final_msg(char final_msg[])
 		return;
 	}
 
-	if(sscanf(final_msg, "winner-%d\n", &(me.final_score)) == 1) {
+	if(code == 6) { // Winner.
 		
 		printf("You won! Score: %d\n", me.final_score);
 
@@ -89,7 +93,8 @@ void interpret_final_msg(char final_msg[])
 		
 
 	if(game == 0) { // If the game hasn't started yet.
-		if(sscanf(final_msg, "%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
+		if(code == 5) { // Initial message.
+			sscanf(final_msg, "%*d-%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B));
 			if(game == 0) { // There's only one player connected. We have to wait for another one to join.
 				game = 2; // The player has to wait for a "start\n" message.
 				printf("dim_board = %d\n", dim_board);
@@ -112,7 +117,7 @@ void interpret_final_msg(char final_msg[])
 		else return;
 	}
 	else if(game == 2) { // If the player is connected to the server, but waiting for a second player to join.
-		if(strcmp(final_msg, "start\n") == 0) {
+		if(code == 7) { // Start.
 			game = 1;
 			printf("Start palying!\n");
 
@@ -125,7 +130,8 @@ void interpret_final_msg(char final_msg[])
 		if(code == 1) { // Se for a segunda jogada armazena na segunda carta.
 			sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card2[0], &card2[1]);
 		}
-		else sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card1[0], &card1[1]); // Se for a primeira jogada armazena na primeira carta.
+		else if(code == 2 || code == 3 || code == 4) sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card1[0], &card1[1]); // Se for a primeira jogada armazena na primeira carta.
+		else if(code == 0) printf("Invalid play!\n");
 
 		if(sscanf_aux == 3) {
 			switch(code) {
@@ -143,7 +149,7 @@ void interpret_final_msg(char final_msg[])
 					paint_card(card2_index[0], card2_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
 					write_card(card2_index[0], card2_index[1], card2, 0, 0, 0); // Pinta as letras a preto.
 					break;
-				case(-2):
+				case(4):
 					paint_card(card1_index[0], card1_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
 					write_card(card1_index[0], card1_index[1], card1, 255, 0, 0); // Pinta as letras a vermelho.
 					paint_card(card2_index[0], card2_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
@@ -232,7 +238,7 @@ void *thread_write(void *arg)
 						if(game==2)
 							printf("Can't select any cards yet! Still waiting for a 2nd player to join.");
 						
-						if(game==1) {
+						if(game==1) { // NAO HAVERÁ PROBLEMAS AQUI POR CAUSA DOS CODES TODOS?????????????????????????????????????????
 							if(code == 1) {
 								get_board_card(event.button.x, event.button.y, &card2_index[0], &card2_index[1]); // Se a primeira carta ja foi jogada (sendo esta a segunda).
 								sprintf(str, "%d-%d\n", card2_index[0], card2_index[1]);
