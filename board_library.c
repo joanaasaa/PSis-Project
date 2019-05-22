@@ -64,9 +64,17 @@ void init_board(int dim) {
 			str_place[2] = '\0';
 
 			count += 2;
-			if(count == dim_board*dim_board) return; // Se já todas as cartas têm valores atribuídos, retorna.
+			if(count == dim_board*dim_board) {
+				for(i=0; i < (dim_board * dim_board); i++) { // Imprime o conteúdo de todas as strings.
+					printf("carta %d: %s\n", i, board[i].v);
+				}
+				return; // Se já todas as cartas têm valores atribuídos, retorna.
+			}
+			
 		}
 	}
+
+	
 }
 
 play_response  board_play(int x, int y) { // Recebe o índice da carta e verifica a jogada.
@@ -116,7 +124,7 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
             		else resp.code =2; // Acertou nas cartas mas o jogo não terminou.
           		}
 				else {
-            		printf("INCORRECT");
+            		printf("INCORRECT\n");
             		resp.code = 4; // Não acertaste nas cartas.
           		}
           		play1[0]= -1; // Faz reset do play1[0] para -1 para sabermos que a próxima jogada será uma 1ª escolha de carta.

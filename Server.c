@@ -11,23 +11,27 @@ int main(int argc, char const *argv[])
 	SDL_Event event; // GRAPHICS
 
 	//-----------------------------------GRAPHICS-----------------------------------
-	/*if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 		exit(-1);
 	}
 	if(TTF_Init() == -1) {
 		printf("TTF_Init: %s\n", TTF_GetError());
 		exit(2);
-	}*/
+	}
 	//------------------------------------------------------------------------------
 
     dim_board = argumentControl(argc, argv);
-    //create_board_window(300, 300, dim_board); // GRAPHICS
+    create_board_window(300, 300, dim_board); // GRAPHICS
 	init_board(dim_board);
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
 	pthread_create(&stdinSocketID, NULL, stdinSocket_thread, NULL); // Prepares server to wait for commands from keyboard.
 	pthread_create(&checkTimerID, NULL, checkTimer_thread, NULL);
+
+	//-----------------------------------GRAPHICS-----------------------------------
+	
+	//------------------------------------------------------------------------------
 	
 	// Server application can be terminated either by the "exit" command from stdin or when final instant is reached.
 	while(1) {
@@ -38,7 +42,7 @@ int main(int argc, char const *argv[])
 	pthread_join(stdinSocketID, NULL);
 	pthread_join(listenSocketID, NULL);
 
-	//close_board_windows(); // GRAPHICS
+	close_board_windows(); // GRAPHICS
 
     return 0;
 }

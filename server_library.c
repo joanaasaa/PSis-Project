@@ -228,7 +228,7 @@ void *player_thread(void *arg)
 
 				memset(str, 0, sizeof(str));
 
-				if(get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B) != NULL) { // If the card is visible to the player (up or locked).
+				if(get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B, board_piece_code) != NULL) { // If the card is visible to the player (up or locked).
 					strcpy(str, get_str2send(i, j, me->rgb_R, me->rgb_G, me->rgb_B, board_piece_code));
 					printf("str: %s\n", str);
 					
@@ -280,12 +280,15 @@ void *player_thread(void *arg)
 			read_message(str);
 
 			if(sscanf(final_msg, "%d-%d\n", &board_x, &board_y) == 2) { // If it received a play from a player the server will now analyse it.
+
 				printf("2 - (x,y) = %d, %d\n", board_x, board_y);
+				printf("indice da carta no board: %d\n", linear_conv(board_x, board_y));
 				play_response resp = board_play(board_x, board_y); // Verifica a jogada.
 
 				if(resp.code == 0) sprintf(str, "%d\n", resp.code);
 				else if(resp.code == 1) sprintf(str, "%d-%c%c\n", resp.code, resp.str_play1[0], resp.str_play1[1]); // Primeira jogada. (Envia o code e a carta).
 				else sprintf(str, "%d-%c%c\n", resp.code, resp.str_play2[0], resp.str_play2[1]); // Segunda jogada. (Envia o code e a carta).
+				
 				write(me->socket, str, strlen(str)); // Envia o feedback ao jogador.
 
 			}

@@ -73,7 +73,7 @@ void interpret_final_msg(char final_msg[])
 {
 	int sscanf_aux = 0;
 
-	if( sscanf(str, "%d-%*s", &code) == 1) {
+	if( sscanf(final_msg, "%d-%*s", &code) == 1) {
 		printf("Success!\n");
 		printf("Code: %d\n", code);
 	}
@@ -85,12 +85,12 @@ void interpret_final_msg(char final_msg[])
 
 	if(code == 6) { // Winner.
 		
+		sscanf(final_msg, "%*d-%d\n", &me.final_score);
 		printf("You won! Score: %d\n", me.final_score);
 
 		// DO LOTS OF OTHER STUFF!!
 
 	}
-		
 
 	if(game == 0) { // If the game hasn't started yet.
 		if(code == 5) { // Initial message.
@@ -99,7 +99,6 @@ void interpret_final_msg(char final_msg[])
 				game = 2; // The player has to wait for a "start\n" message.
 				printf("dim_board = %d\n", dim_board);
 				printf("Waiting for a second player...\n");
-				return;
 			}
 
 			// PRINT INITIAL BOARD ON SCREEN.
@@ -111,8 +110,9 @@ void interpret_final_msg(char final_msg[])
 				printf("TTF_Init: %s\n", TTF_GetError());
 				exit(2);
 			}
-			create_board_window(MAX_WINDOW, MAX_WINDOW, dim_board); // Prints a clean board to the screen.
+			create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
 			board = 1; 
+			return;
 		}
 		else return;
 	}
@@ -130,29 +130,31 @@ void interpret_final_msg(char final_msg[])
 		if(code == 1) { // Se for a segunda jogada armazena na segunda carta.
 			sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card2[0], &card2[1]);
 		}
-		else if(code == 2 || code == 3 || code == 4) sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card1[0], &card1[1]); // Se for a primeira jogada armazena na primeira carta.
-		else if(code == 0) printf("Invalid play!\n");
+		else if(code == 0) {
+			printf("Invalid play!\n");
+			return;
+		}
+		else sscanf_aux = sscanf(final_msg, "%d-%c%c\n", &code, &card1[0], &card1[1]); // Se for a primeira jogada armazena na primeira carta.
+		
 
 		if(sscanf_aux == 3) {
 			switch(code) {
 				case(1): // Foi a primeira escolha de uma jogada.
-					paint_card(card1_index[0], card1_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
+					paint_card(card1_index[0], card1_index[1], me.rgb_R, me.rgb_G, me.rgb_B); // Pinta o fundo da carta de verde.
 					write_card(card1_index[0], card1_index[1], card1, 200, 200, 200); // Pinta as letras de cinzento.
 					break;
 				case(3): // O jogo terminou.
-					me.score++;
 					terminate = 1;
 				case(2): // The play's 2nd choice was made. The cards matched but the game still goes on.
-					me.score++;
-					paint_card(card1_index[0], card1_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
+					paint_card(card1_index[0], card1_index[1], me.rgb_R, me.rgb_G, me.rgb_B); // Pinta o fundo da carta de verde.
 					write_card(card1_index[0], card1_index[1], card1, 0, 0, 0); // Pinta as letras a preto.
-					paint_card(card2_index[0], card2_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
+					paint_card(card2_index[0], card2_index[1], me.rgb_R, me.rgb_G, me.rgb_B); // Pinta o fundo da carta de verde.
 					write_card(card2_index[0], card2_index[1], card2, 0, 0, 0); // Pinta as letras a preto.
 					break;
 				case(4):
-					paint_card(card1_index[0], card1_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
+					paint_card(card1_index[0], card1_index[1], me.rgb_R, me.rgb_G, me.rgb_B); // Pinta o fundo da carta de verde.
 					write_card(card1_index[0], card1_index[1], card1, 255, 0, 0); // Pinta as letras a vermelho.
-					paint_card(card2_index[0], card2_index[1], 7, 200, 100); // Pinta o fundo da carta de verde.
+					paint_card(card2_index[0], card2_index[1], me.rgb_R, me.rgb_G, me.rgb_B); // Pinta o fundo da carta de verde.
 					write_card(card2_index[0], card2_index[1], card2, 255, 0, 0); // Pinta as letras a vermelho.
 					
 					sleep(2); 
@@ -238,16 +240,23 @@ void *thread_write(void *arg)
 						if(game==2)
 							printf("Can't select any cards yet! Still waiting for a 2nd player to join.");
 						
-						if(game==1) { // NAO HAVERÁ PROBLEMAS AQUI POR CAUSA DOS CODES TODOS?????????????????????????????????????????
+						if(game==1) {
 							if(code == 1) {
 								get_board_card(event.button.x, event.button.y, &card2_index[0], &card2_index[1]); // Se a primeira carta ja foi jogada (sendo esta a segunda).
 								sprintf(str, "%d-%d\n", card2_index[0], card2_index[1]);
+
+								printf("indice da carta 2 no board: %d\n", card2_index[1]*dim_board+card2_index[0]);
+
+
 								write(fd, str, strlen(str)); // Recebe uma string do servidor.
 								printf("click_2 (%s)\n", str); // Imprime na consola as coordenadas do rato enviadas ao sevidor.
 							}
 							else {
 								get_board_card(event.button.x, event.button.y, &card1_index[0], &card1_index[1]); // Se esta é a primeira jogada.
 								sprintf(str, "%d-%d\n", card1_index[0], card1_index[1]);
+
+								printf("indice da carta 1 no board: %d\n", card1_index[1]*dim_board+card1_index[0]);
+
 								write(fd, str, strlen(str)); // Recebe uma string do servidor.
 								printf("click (%s)\n", str); // Imprime na consola as coordenadas do rato enviadas ao sevidor.
 							}

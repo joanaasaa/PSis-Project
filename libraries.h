@@ -15,4 +15,4 @@
 #include <pthread.h>
 // Constants:
 #define SERVER_PORT 3000
-#define WINDOW_SIZE 1000
+#define WINDOW_SIZE 300
