@@ -15,6 +15,8 @@ void interpret_final_msg(char final_msg[]);
 
 void *thread_read(void *arg);
 
-void play_game();
+void check_time();
 
 void *thread_write(void *arg);
+
+int client_linear_conv(int i, int j);

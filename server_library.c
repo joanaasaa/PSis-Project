@@ -5,8 +5,7 @@
 int dim_board;
 int nr_players = 0;
 int terminate = 0;
-char final_msg[25];
-int x_write, y_write; // Chosen card coordinates to send to every player.
+//int x_write, y_write; // Chosen card coordinates to send to every player.
 player *players_head = NULL; // List of in-game players.
 //pthread_t endGameID;
 
@@ -212,6 +211,7 @@ void *player_thread(void *arg)
 	int game = 0; // Registers if the game has started (1), or not (0).
 	int x=-1, y=-1; //Card coordinates received by the player (mouse button x and y).
 	char str[100]; // String for messages.
+	char final_msg[25];
 	player *me = (player*) arg;
 	int board_x, board_y; // Para guardar o lugar na matriz de cartas da carta escolhida pelo jogador.
 	int init_msg_code = 5, winner_code = 6, start_code = 7, board_piece_code = 8; // Codes that are used to identify the type of message that the server is sending to the client.
@@ -277,7 +277,7 @@ void *player_thread(void *arg)
 		else { // If there was data to read.  // INTERPRETS MESSAGE FROM PLAYER...
 
 			printf("read %d: %s\n", n, str);
-			read_message(str);
+			read_message(str, final_msg);
 
 			if(sscanf(final_msg, "%d-%d\n", &board_x, &board_y) == 2) { // If it received a play from a player the server will now analyse it.
 
@@ -302,11 +302,12 @@ void *player_thread(void *arg)
 	pthread_exit(0);
 }
 
-void read_message(char str[])
+void read_message(char str[], char final_msg[])
 {
-	char *res_aux, buffer[200] = "\0", res[100];
+	char *res_aux, buffer[200] = "\0", res[100], final_msg_aux[100];
 	
 	strcat(buffer, str);
+	strcpy(final_msg_aux, final_msg);
 
 	res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
 	
@@ -315,17 +316,18 @@ void read_message(char str[])
 		memset(res, 0, sizeof(res));
 		strcpy(res, res_aux);
 
-		memset(final_msg, 0, sizeof(final_msg));
+		memset(final_msg_aux, 0, sizeof(final_msg_aux));
 		int i=0;
 		for(i=0; buffer[i] != '\n'; i++) {
-			final_msg[i] = buffer[i];
+			final_msg_aux[i] = buffer[i];
 		}
-		final_msg[i] = '\n';
-		final_msg[i+1] = '\0';
+		final_msg_aux[i] = '\n';
+		final_msg_aux[i+1] = '\0';
 
 		memset(buffer, 0, sizeof(buffer));
 		strcpy(buffer, res);
 
 		res_aux = strstr(buffer, "\n");
 	}
+	strcpy(final_msg, final_msg_aux);
 }

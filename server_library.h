@@ -28,4 +28,4 @@ void *listenSocket_thread(void *arg);
 
 void *player_thread(void *arg);
 
-void read_message(char str[]);
+void read_message(char str[], char final_msg[]);
