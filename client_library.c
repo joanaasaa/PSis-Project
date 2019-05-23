@@ -4,13 +4,13 @@
 #include "graphics_library.h"
 
 int game = 0; // Indicates the game's state.
-int board = 0; // Indicates if the board's graphics have already been initialized (1), or not (0).
+int graphics = 0; // Indicates if the board's graphics have already been initialized (1), or not (0).
 int terminate = 0; 
 int fd;
 int dim_board = 0;
 player_self me; // Player's info.
 SDL_Event event;
-char card1[3], card2[3]; // String of the cads chosen in a play.
+char card1[3], card2[3];
 int card1_x = -1;
 int card1_y = -1;
 int card2_x = -1;
@@ -96,7 +96,7 @@ void interpret_final_msg(char final_msg[])
 					}
 					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
 
-					board = 1; 
+					graphics = 1; 
 				}
 				else {
 					printf("Bad message from server!");
@@ -133,7 +133,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 1) { // A player made its 1st choice.
-				if(sscanf(str, "%*d-%c%c-%d-%d-%d-%d-%d\n", print_str1[0], print_str1[1], &print_x1, &print_y1, &print_R, &print_G, &print_B) == 7) {
+				if(sscanf(str, "%*d-%c%c-%d-%d-%d-%d-%d\n", &(print_str1[0]), &(print_str1[1]), &print_x1, &print_y1, &print_R, &print_G, &print_B) == 7) {
 					print_str1[2] = '\0';
 					paint_card(print_x1, print_y1 , print_R, print_G, print_B); // Paints the card's backgroud with the player's color.
 					write_card(print_x1, print_y1, print_str1, 200, 200, 200); // Paints the letters on the card grey.
@@ -144,7 +144,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 2 || code == 3) { // A player made its 2nd choice. The cards match but the game continues || ends.
-				if(sscanf(str, "%*d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", print_str1[0], print_str1[1], &print_x1, &print_y1, &print_x2, &print_y2, &print_R, &print_G, &print_B) == 9) {
+				if(sscanf(str, "%*d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", &(print_str1[0]), &(print_str1[1]), &print_x1, &print_y1, &print_x2, &print_y2, &print_R, &print_G, &print_B) == 9) {
 					print_str1[2] = '\0';
 					paint_card(print_x1, print_y1 , print_R, print_G, print_B); // Paints the card's backgroud with the player's color.
 					write_card(print_x1, print_y1, print_str1, 0, 0, 0); // Paints the letters on the card black.
@@ -162,7 +162,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 4) { // A player made its 2nd choice but the cards don't match.
-				if(sscanf(str, "%*d-%c%c-%c%c-%d-%d-%d-%d-%d-%d-%d\n", print_str1[0], print_str1[1], print_str2[0], print_str2[1], &print_x1, &print_y1, &print_x2, &print_y2, &print_R, &print_G, &print_B) == 11) {
+				if(sscanf(str, "%*d-%c%c-%c%c-%d-%d-%d-%d-%d-%d-%d\n", &(print_str1[0]), &(print_str1[1]), &(print_str2[0]), &(print_str2[1]), &print_x1, &print_y1, &print_x2, &print_y2, &print_R, &print_G, &print_B) == 11) {
 					print_str1[2] = '\0';
 					print_str2[2] = '\0';
 					paint_card(print_x1, print_y1 , print_R, print_G, print_B); // Paints the card's backgroud with the player's color.
@@ -178,7 +178,7 @@ void interpret_final_msg(char final_msg[])
 			else if(code == 5) { // I made my first choice.
 				if(waiting == 1) {
 					waiting = 0;
-					if(sscanf(str, "%*d-%c%c\n", card1[0], card1[1]) == 2) {
+					if(sscanf(str, "%*d-%c%c\n", &(card1[0]), &(card1[1])) == 2) {
 						card1[2] = '\0';
 						paint_card(card1_x, card1_y, me.rgb_R, me.rgb_G, me.rgb_B); // Paints the card's backgroud with our color.
 						write_card(card1_x, card1_y, card1, 200, 200, 200); // Paints the letters on the card grey.
@@ -223,7 +223,7 @@ void interpret_final_msg(char final_msg[])
 			else if(code == 8) { // We made our 2nd choice and the cards don't match.
 				if(waiting == 1) {
 					waiting = 0;
-					if(sscanf(str, "%*d-%c%c\n", card2[0], card2[1]) == 2) {
+					if(sscanf(str, "%*d-%c%c\n", &(card2[0]), &(card2[1])) == 2) {
 						card2[2] = '\0';
 						paint_card(card1_x, card1_y, me.rgb_R, me.rgb_G, me.rgb_B); // Paints the card's backgroud with our color.
 						write_card(card1_x, card1_y, card1, 255, 0, 0); // Paints the letters on the card red.
@@ -281,7 +281,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 14) {
-				if(sscanf(str, "%*d-%d-%d-%d-%d\n", &print_x1, &print_y1, &print_x2, print_y2) == 4) {
+				if(sscanf(str, "%*d-%d-%d-%d-%d\n", &print_x1, &print_y1, &print_x2, &print_y2) == 4) {
 					paint_card(print_x1, print_y1, 255, 255, 255); // Paints the card white.
 					paint_card(print_x2, print_y2, 255, 255, 255); // Paints the card white.
 				}
@@ -392,7 +392,7 @@ void *thread_write(void *arg)
 
 	while(!terminate) {	
 
-		if(board== 1) { // If the board's graphics have already been initialized.
+		if(graphics == 1) { // If the board's graphics have already been initialized.
 			
 			while(SDL_PollEvent(&event)) {
 				

@@ -4,7 +4,7 @@ typedef struct player_self {
     int rgb_R;
     int rgb_G;
     int rgb_B;
-    int final_score;
+    int score;
 } player_self;
 
 void argumentControl(int argc, char const *argv[]);
