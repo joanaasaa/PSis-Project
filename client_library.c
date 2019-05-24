@@ -472,7 +472,7 @@ void *thread_write(void *arg)
 
 						get_board_card(event.button.x, event.button.y, &card_x_aux, &card_y_aux);
 
-						if(count_2seconds==1 || waiting==1 || waiting == 2) // If a player is blocked after a bad choice or is waiting for feedback on play or is waiting for board cards (when joining in the middle of a game).
+						if(count_2seconds==1 || waiting!=0) // If a player is blocked after a bad choice or is waiting for feedback on play or is waiting for board cards (when joining in the middle of a game).
 							printf("Wait!\n");
 						else { // If the player's not blocked.
 							if(game==2)

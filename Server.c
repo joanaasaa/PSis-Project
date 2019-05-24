@@ -21,9 +21,11 @@ int main(int argc, char const *argv[])
 	}
 
 	// START
-    	dim_board = argumentControl(argc, argv);
-    	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // GRAPHICS
+	dim_board = argumentControl(argc, argv);
+	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // GRAPHICS
 	init_board(dim_board);
+
+	init_mutexes();
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
 	pthread_create(&stdinSocketID, NULL, stdinSocket_thread, NULL); // Prepares server to wait for commands from keyboard.
@@ -38,7 +40,9 @@ int main(int argc, char const *argv[])
 	pthread_join(stdinSocketID, NULL);
 	pthread_join(listenSocketID, NULL);
 
-	close_board_windows(); // GRAPHICS
+	close_board_windows(); // Ends graphics for server.
+
+	destroy_mutexes();
 
     return 0;
 }

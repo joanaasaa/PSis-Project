@@ -18,6 +18,8 @@ int check_terminate();
 
 int argumentControl(int argc, char const *argv[]);
 
+void init_mutexes();
+
 void addPlayer(int newfd);
 
 void removePlayer(player *toRemove);
@@ -31,3 +33,7 @@ void *checkTimer_thread(void *arg);
 void *listenSocket_thread(void *arg);
 
 void *player_thread(void *arg);
+
+void *end_game(void *arg);
+
+void destroy_mutexes();
