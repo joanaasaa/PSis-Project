@@ -8,8 +8,20 @@ int n_corrects; // Guarda o número de cartas que já estão definitivamente vir
 int linear_conv(int i, int j) {
 	return j*dim_board+i;
 }
+
+void set_card_traits(int i, int j, int status, int r, int g, int b) {
+	board[linear_conv(i, j)].status = status;
+	board[linear_conv(i, j)].rgb_R = r;
+	board[linear_conv(i, j)].rgb_G = g;
+	board[linear_conv(i, j)].rgb_B = b;
+}
+
 char *get_card_str(int i, int j) {
 	return board[linear_conv(i, j)].v;
+}
+
+char get_card_status(int i, int j) {
+	return board[linear_conv(i, j)].status;
 }
 
 void clear_board(){
@@ -135,14 +147,18 @@ play_response  board_play(int x, int y) { // Recebe o índice da carta e verific
 	return resp; // Retorna a estrura com a info da jogada completa (1ª e 2ª escolhas).
 }
 
-char *get_str2send(int i, int j, int r, int g, int b, int board_piece_code) {
-	
+char *get_str2send(int i, int j) 
+{
+	int code = 15;
 	char *str_send = NULL;
 
-	if( board[i].status == 'u' || board[i].status == 'l' ){
-		str_send = (char*)malloc(sizeof(char) * 25);
-		sprintf(str_send, "%d-%c-%d-%d-%d-%d-%d-%c%c\n", board_piece_code, board[linear_conv(i,j)].status, i, j, r, g, b, board[linear_conv(i,j)].v[0], board[linear_conv(i, j)].v[1]);
-	}	
+	str_send = (char*)malloc(sizeof(char) * 100);
+	sprintf(str_send, "%d-%c%c-%c-%d-%d-%d-%d-%d\n", code,  board[linear_conv(i,j)].v[0], 
+															board[linear_conv(i,j)].v[1], 
+															board[linear_conv(i,j)].status, i, j, 
+															board[linear_conv(i,j)].rgb_R, 
+															board[linear_conv(i,j)].rgb_G, 
+															board[linear_conv(i,j)].rgb_B);	
 
 	return str_send;
 }
