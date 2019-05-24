@@ -1,6 +1,6 @@
 #include "libraries.h"
 #include "client_library.h"
-#include "board_library.h"
+//#include "board_library.h"
 #include "graphics_library.h"
 
 int game = 0; // Indicates the game's state.
@@ -308,8 +308,12 @@ void *thread_read(void *arg)
 	int n;
 	int code;
 	char str[100];
-	char *res_aux, buffer[200] = "\0", final_msg[25], res[100];
+	char *res_aux, buffer[200], final_msg[100], res[100];
 	time_t now;
+
+	memset(buffer, 0, sizeof(buffer));
+	memset(final_msg, 0, sizeof(buffer));
+	memset(res, 0, sizeof(buffer));
 
 	while(!terminate) {
 
