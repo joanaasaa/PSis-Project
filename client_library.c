@@ -74,7 +74,13 @@ void interpret_final_msg(char final_msg[])
 	char print_str1[3], print_str2[3];
 	char status;
 
-	if(sscanf(str, "%d%*s", &code) == 1) {
+	printf("str1 = %s\n", str);
+	int a = sscanf(str, "%d%*s", &code);
+	printf("str = %s\n", str);
+	printf("CODE = %d\n", code);
+	printf("sscanf returned: %d\n", a);
+
+	if(sscanf(str, "%d%*s", &code) == -1) {
 		printf("Received message with code %d\n", code);
 
 		if(game == 0) {
@@ -339,7 +345,7 @@ void interpret_final_msg(char final_msg[])
 
 		} // End of game = 1.
 
-	} // End of if(sscanf(str, "%d%*s", &code) == 1).
+	} // End of if(sscanf(str, "%d%*s", &code) == -1).
 	else
 		printf("Couldn't read message!\n");
 

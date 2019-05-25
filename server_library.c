@@ -9,7 +9,7 @@ int nr_players = 0;
 int terminate = 0;
 player *players_head = NULL; // List of in-game players.
 pthread_mutex_t lock_addPlayer, lock_removePlayer, verify_card;
-pthread_t end_game;
+pthread_t end_gameID;
 
 int check_terminate()
 {
@@ -45,19 +45,19 @@ void init_mutexes()
 {
 	int n;
 
-	n = pthread_mutex_init(&lock_addPlayer, NULL)
+	n = pthread_mutex_init(&lock_addPlayer, NULL);
 	if(n != 0) { 
         printf("Mutex initialization failed!\n"); 
         exit(-1); 
     }
 
-	n = pthread_mutex_init(&lock_removePlayer, NULL)
+	n = pthread_mutex_init(&lock_removePlayer, NULL);
 	if(n != 0) { 
         printf("Mutex initialization failed!\n"); 
         exit(-1); 
     }
 
-	n = pthread_mutex_init(&verify_card, NULL)
+	n = pthread_mutex_init(&verify_card, NULL);
 	if(n != 0) { 
         printf("Mutex initialization failed!\n"); 
         exit(-1); 
@@ -140,7 +140,7 @@ void interpret_final_msg(char final_msg[], player *me)
 	int code;
 	char card1[3], card2[3];
 	char str[100];
-
+	
 	if(sscanf(str, "%d%*s", &code) == 1) {
 		printf("Received message with code %d\n", code);
 
@@ -167,7 +167,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					
 					// Gets card's string.
 					memset(card1, 0, sizeof(card1));
-					card1 = get_card_str(me->card1_x, me->card1_y);
+					strcpy(card1, get_card_str(me->card1_x, me->card1_y));
 					
 					// Server updates its own graphics.
 					paint_card(me->card1_x, me->card1_y , me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
@@ -206,8 +206,8 @@ void interpret_final_msg(char final_msg[], player *me)
 					}
 					
 					// Gets card's string.
-					card1 = get_card_str(me->card1_x, me->card1_y);
-					card2 = get_card_str(me->card2_x, me->card2_y);
+					strcpy(card1, get_card_str(me->card1_x, me->card1_y));
+					strcpy(card2, get_card_str(me->card2_x, me->card2_y));
 
 					if(strcmp(card1, card2) == 0) {
 						printf("Cards match!\n");
@@ -235,7 +235,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							// Updates the other players.
 							memset(str, 0, sizeof(str));
 							code = 2;
-							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1, card2, me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
+							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
 							for(player *aux = players_head; aux != NULL; aux=aux->next) {
 								if(aux == me) continue;
 								else write(aux->socket, str, strlen(str));
@@ -256,7 +256,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							// Updates the other players.
 							memset(str, 0, sizeof(str));
 							code = 3;
-							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1, card2, me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
+							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
 							for(player *aux = players_head; aux != NULL; aux=aux->next) {
 								if(aux == me) continue;
 								else write(aux->socket, str, strlen(str));
@@ -267,7 +267,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							me->card2_x = -1;
 							me->card2_y = -1;
 
-							pthread_create(&end_game, NULL, listenSocket_thread, NULL);
+							pthread_create(&end_gameID, NULL, end_game_thread, NULL);
 						}
 
 					}
@@ -294,8 +294,8 @@ void interpret_final_msg(char final_msg[], player *me)
 
 						// Updates the other players.
 						memset(str, 0, sizeof(str));
-						code = 2;
-						sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1, card2, me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
+						code = 4;
+						sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
 						for(player *aux = players_head; aux != NULL; aux=aux->next) {
 							if(aux == me) continue;
 							else write(aux->socket, str, strlen(str));
@@ -585,7 +585,7 @@ void *player_thread(void *arg)
 	pthread_exit(0);
 }
 
-void *end_game(void *arg) 
+void *end_game_thread(void *arg) 
 {
 	char str[5];
 	player *winner = NULL;
@@ -605,7 +605,7 @@ void *end_game(void *arg)
 
 	// Sends message to winner.
 	memset(str, 0, sizeof(str));
-	code = 10;
+	int code = 10;
 	sprintf(str, "%d\n", code);
 	write(winner->socket, str, strlen(str));
 

@@ -34,6 +34,6 @@ void *listenSocket_thread(void *arg);
 
 void *player_thread(void *arg);
 
-void *end_game(void *arg);
+void *end_game_thread(void *arg);
 
 void destroy_mutexes();
