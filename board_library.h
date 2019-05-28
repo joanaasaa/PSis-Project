@@ -16,9 +16,13 @@ typedef struct play_response {
 } play_response;
 
 // ------- FUNCTIONS -------
+void init_mutex();
+
 int linear_conv(int i, int j); // Devolve um valor linear, consoante coordenadas dadas.
 
 void set_card_traits(int i, int j, int status, int r, int g, int b);
+
+void set_pair_traits(int i1, int j1, int i2, int j2, int status, int r, int g, int b);
 
 char *get_card_str(int i, int j);
 
@@ -31,3 +35,5 @@ void init_board(int dim); // Para atribuir as strings aos lugares do tabuleiro.
 play_response board_play (int x, int y);
 
 char *get_str2send(int i, int j); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.
+
+void destroy_mutex();

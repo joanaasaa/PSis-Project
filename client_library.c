@@ -372,7 +372,7 @@ void *thread_read(void *arg)
 				card2_y = -1; // The first play is undone.
 				
 				memset(str, 0, sizeof(str));
-				code = 20;
+				code = -4;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
 			}
@@ -389,7 +389,7 @@ void *thread_read(void *arg)
 				card1_y = -1; // The first play is undone.
 				
 				memset(str, 0, sizeof(str));
-				code = 19;
+				code = -3;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
 			}
@@ -491,7 +491,7 @@ void *thread_write(void *arg)
 									card1_y = card_y_aux;
 
 									memset(str, 0, sizeof(str));
-									code = 17;
+									code = -1;
 									sprintf(str, "%d-%d-%d\n", code, card1_x, card1_y);
 									write(fd, str, strlen(str));
 
@@ -505,7 +505,7 @@ void *thread_write(void *arg)
 									card2_y = card_y_aux;
 
 									memset(str, 0, sizeof(str));
-									code = 18;
+									code = -2;
 									sprintf(str, "%d-%d-%d\n", code, card2_x, card2_y);
 									write(fd, str, strlen(str));
 

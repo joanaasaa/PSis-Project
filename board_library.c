@@ -4,16 +4,50 @@ int dim_board;
 card *board; // Vector alocado onde se encontra guardado o conteúdo de todas as cartas.
 int play1[2]; // Vector onde se guardam os índices da primeira carta escolhida. play1[0]=-1 se ainda não foi escolhida nenhuma carta. 
 int n_corrects; // Guarda o número de cartas que já estão definitivamente viradas para cima.
+pthread_mutex_t lock_board = PTHREAD_MUTEX_INITIALIZER;
+
+void init_mutex()
+{
+	int n;
+	
+	n = pthread_mutex_init(&lock_board, NULL);
+	if(n != 0) { 
+        printf("Mutex initialization failed!\n"); 
+        exit(-1); 
+    }
+}
 
 int linear_conv(int i, int j) {
 	return j*dim_board+i;
 }
 
 void set_card_traits(int i, int j, int status, int r, int g, int b) {
+	
+	pthread_mutex_lock(&lock_board);
+	
 	board[linear_conv(i, j)].status = status;
 	board[linear_conv(i, j)].rgb_R = r;
 	board[linear_conv(i, j)].rgb_G = g;
 	board[linear_conv(i, j)].rgb_B = b;
+
+	pthread_mutex_unlock(&lock_board);
+}
+
+void set_pair_traits(int i1, int j1, int i2, int j2, int status, int r, int g, int b) {
+	
+	pthread_mutex_lock(&lock_board);
+	
+	board[linear_conv(i1, j1)].status = status;
+	board[linear_conv(i1, j1)].rgb_R = r;
+	board[linear_conv(i1, j1)].rgb_G = g;
+	board[linear_conv(i1, j1)].rgb_B = b;
+
+	board[linear_conv(i2, j2)].status = status;
+	board[linear_conv(i2, j2)].rgb_R = r;
+	board[linear_conv(i2, j2)].rgb_G = g;
+	board[linear_conv(i2, j2)].rgb_B = b;
+
+	pthread_mutex_unlock(&lock_board);
 }
 
 char *get_card_str(int i, int j) {
@@ -21,7 +55,15 @@ char *get_card_str(int i, int j) {
 }
 
 char get_card_status(int i, int j) {
-	return board[linear_conv(i, j)].status;
+	char status;
+
+	pthread_mutex_lock(&lock_board);
+
+	status = board[linear_conv(i, j)].status;
+
+	pthread_mutex_unlock(&lock_board);
+
+	return status;
 }
 
 void clear_board(){
@@ -173,4 +215,9 @@ char *get_str2send(int i, int j)
 															board[linear_conv(i,j)].rgb_B);	
 
 	return str_send;
+}
+
+void destroy_mutex() 
+{
+	pthread_mutex_destroy(&lock_board);
 }

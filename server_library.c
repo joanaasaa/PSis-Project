@@ -8,9 +8,7 @@ int found_pairs = 0;
 int nr_players = 0;
 int terminate = 0;
 player *players_head = NULL; // List of in-game players.
-pthread_mutex_t lock_addPlayer = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lock_removePlayer = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t verify_card = PTHREAD_MUTEX_INITIALIZER;
+pthread_rwlock_t lock_players;
 pthread_t end_gameID;
 
 int check_terminate()
@@ -43,25 +41,13 @@ int argumentControl(int argc, char const *argv[]) {
 	return dim_board;
 }
 
-void init_mutexes() 
+void init_lock() 
 {
 	int n;
-
-	n = pthread_mutex_init(&lock_addPlayer, NULL);
+	
+	n = pthread_rwlock_init(&lock_players, NULL);
 	if(n != 0) { 
-        printf("Mutex initialization failed!\n"); 
-        exit(-1); 
-    }
-
-	n = pthread_mutex_init(&lock_removePlayer, NULL);
-	if(n != 0) { 
-        printf("Mutex initialization failed!\n"); 
-        exit(-1); 
-    }
-
-	n = pthread_mutex_init(&verify_card, NULL);
-	if(n != 0) { 
-        printf("Mutex initialization failed!\n"); 
+        printf("Lock initialization failed!\n"); 
         exit(-1); 
     }
 }
@@ -85,9 +71,7 @@ void addPlayer(int newfd)
 	players_aux->rgb_B = rand() % 127 + 128;
 	players_aux->score = 0; // Number of pairs.
 
-	pthread_mutex_lock(&lock_addPlayer);
-	
-	nr_players++;
+	pthread_rwlock_rdlock(&lock_players);
 	
 	if(players_head == NULL) { // If the list is empty, the head is created.
 		players_aux->next = NULL;
@@ -98,7 +82,9 @@ void addPlayer(int newfd)
 		players_head = players_aux;
 	}
 
-	pthread_mutex_unlock(&lock_addPlayer);
+	pthread_rwlock_unlock(&lock_players);
+
+	nr_players++;
 
 	printf("A new player is now connected.\n");
 
@@ -113,7 +99,7 @@ void removePlayer(player *toRemove)
 			
 	close(toRemove->socket); // Closing player's socket.
 	
-	pthread_mutex_lock(&lock_removePlayer); 
+	pthread_rwlock_wrlock(&lock_players); 
 
 	// Removing the player from the list.
 	players_prev = NULL;
@@ -128,13 +114,28 @@ void removePlayer(player *toRemove)
 		players_prev->next = players_aux->next;
 		free(players_aux);
 	}
-	nr_players--;
 
-	pthread_mutex_unlock(&lock_removePlayer);
+	pthread_rwlock_unlock(&lock_players);
+
+	nr_players--;
 
 	printf("There are now %d players in-game.\n", nr_players);
 
 	return;
+}
+
+void write2all(player *me, char str[])
+{
+	player *aux = NULL;
+	
+	pthread_rwlock_rdlock(&lock_players);
+
+	for(player *aux = players_head; aux != NULL; aux=aux->next) {
+		if(aux == me) continue;
+		else write(aux->socket, str, strlen(str));
+	}
+
+	pthread_rwlock_unlock(&lock_players);
 }
 
 void interpret_final_msg(char final_msg[], player *me) 
@@ -146,15 +147,13 @@ void interpret_final_msg(char final_msg[], player *me)
 	strcpy(str, final_msg);
 	printf("Message Received : %s\n", str);
 	
-	if(sscanf(str, "%d%*s", &code) == 1) {
-		printf("Received message with code %d\n", code);
+	if(sscanf(str, "-%d%*s", &code) == 1) {
+		printf("Received message with code -%d\n", code);
 
-		if(game == 1) {
-
-			pthread_mutex_lock(&verify_card); 
+		if(game == 1) { 
 			
-			if(code == 17) {
-				if(sscanf(str, "%*d-%d-%d\n", &(me->card1_x), &(me->card1_y)) == 2) {
+			if(code == 1) {
+				if(sscanf(str, "-%*d-%d-%d\n", &(me->card1_x), &(me->card1_y)) == 2) {
 					
 					printf("x: %d	y: %d\n", me->card1_x, me->card1_y);
 					printf("status: %c\n", get_card_status(me->card1_x, me->card1_y));
@@ -164,14 +163,11 @@ void interpret_final_msg(char final_msg[], player *me)
 						code = 0;
 						sprintf(str, "%d\n", code);
 						write(me->socket, str, strlen(str));
-						pthread_mutex_unlock(&verify_card);
 						return;
 					}
 
 					// Updates the matched cards' status in the board.
 					set_card_traits(me->card1_x, me->card1_y, 'u', me->rgb_R, me->rgb_G, me->rgb_B);
-
-					pthread_mutex_unlock(&verify_card);
 					
 					// Gets card's string.
 					memset(card1, 0, sizeof(card1));
@@ -191,25 +187,21 @@ void interpret_final_msg(char final_msg[], player *me)
 					memset(str, 0, sizeof(str));
 					code = 1;
 					sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d\n", code, card1[0], card1[1], me->card1_x, me->card1_y, me->rgb_R, me->rgb_G, me->rgb_B);
-					for(player *aux = players_head; aux != NULL; aux=aux->next) {
-						if(aux == me) continue;
-						else write(aux->socket, str, strlen(str));
-					}
+					write2all(me, str);
 				}
 				else {
 					printf("Bad message from server!");
 				}
 			}
 
-			else if(code == 18) {
-				if(sscanf(str, "%*d-%d-%d\n", &(me->card2_x), &(me->card2_y)) == 2) {
+			else if(code == 2) {
+				if(sscanf(str, "-%*d-%d-%d\n", &(me->card2_x), &(me->card2_y)) == 2) {
 					
 					if(get_card_status(me->card2_x, me->card2_y) != 'd') {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
 						write(me->socket, str, strlen(str));
-						pthread_mutex_unlock(&verify_card);
 						return;
 					}
 					
@@ -223,10 +215,7 @@ void interpret_final_msg(char final_msg[], player *me)
 						printf("Nr. of pairs found: %d\n\n", found_pairs);
 
 						// Updates the matched cards' status in the board.
-						set_card_traits(me->card1_x, me->card1_y, 'l', me->rgb_R, me->rgb_G, me->rgb_B);
-						set_card_traits(me->card2_x, me->card2_y, 'l', me->rgb_R, me->rgb_G, me->rgb_B);
-
-						pthread_mutex_unlock(&verify_card);
+						set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'l', me->rgb_R, me->rgb_G, me->rgb_B);
 
 						// Server updates its own graphics.
 						paint_card(me->card1_x, me->card1_y, me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
@@ -245,10 +234,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							memset(str, 0, sizeof(str));
 							code = 2;
 							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
-							for(player *aux = players_head; aux != NULL; aux=aux->next) {
-								if(aux == me) continue;
-								else write(aux->socket, str, strlen(str));
-							}
+							write2all(me, str);
 
 							me->card1_x = -1;
 							me->card1_y = -1;
@@ -266,10 +252,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							memset(str, 0, sizeof(str));
 							code = 3;
 							sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
-							for(player *aux = players_head; aux != NULL; aux=aux->next) {
-								if(aux == me) continue;
-								else write(aux->socket, str, strlen(str));
-							}
+							write2all(me, str);
 
 							me->card1_x = -1;
 							me->card1_y = -1;
@@ -284,10 +267,7 @@ void interpret_final_msg(char final_msg[], player *me)
 						printf("Cards don't match.\n");
 
 						// Updates the matched cards' status in the board.
-						set_card_traits(me->card1_x, me->card1_y, 'f', me->rgb_R, me->rgb_G, me->rgb_B);
-						set_card_traits(me->card2_x, me->card2_y, 'f', me->rgb_R, me->rgb_G, me->rgb_B);
-
-						pthread_mutex_unlock(&verify_card);
+						set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'f', me->rgb_R, me->rgb_G, me->rgb_B);
 						
 						// Server updates its own graphics.
 						paint_card(me->card1_x, me->card1_y, me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
@@ -305,10 +285,7 @@ void interpret_final_msg(char final_msg[], player *me)
 						memset(str, 0, sizeof(str));
 						code = 4;
 						sprintf(str, "%d-%c%c-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1[0], card1[1], card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
-						for(player *aux = players_head; aux != NULL; aux=aux->next) {
-							if(aux == me) continue;
-							else write(aux->socket, str, strlen(str));
-						}
+						write2all(me, str);
 					}	
 				}
 				else {
@@ -316,11 +293,9 @@ void interpret_final_msg(char final_msg[], player *me)
 				}
 			}
 
-			else if(code == 19) {
+			else if(code == 3) {
 				// Sets the card's status to down (d).
 				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
-
-				pthread_mutex_unlock(&verify_card);
 
 				// Server updates its own graphics
 				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
@@ -329,21 +304,15 @@ void interpret_final_msg(char final_msg[], player *me)
 				memset(str, 0, sizeof(str));
 				code = 13;
 				sprintf(str, "%d-%d-%d\n", code, me->card1_x, me->card1_y);
-				for(player *aux = players_head; aux != NULL; aux=aux->next) {
-					if(aux == me) continue;
-					else write(aux->socket, str, strlen(str));
-				}
+				write2all(me, str);
 
 				me->card1_x = -1;
 				me->card1_y = -1;
 			}
 
-			else if(code == 20) {	
+			else if(code == 4) {	
 				// Sets the card's status to down (d).
-				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
-				set_card_traits(me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
-
-				pthread_mutex_unlock(&verify_card);
+				set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
 
 				// Server updates its own graphics
 				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
@@ -353,10 +322,7 @@ void interpret_final_msg(char final_msg[], player *me)
 				memset(str, 0, sizeof(str));
 				code = 14;
 				sprintf(str, "%d-%d-%d-%d-%d\n", code, me->card1_x, me->card1_y, me->card2_x, me->card2_y);
-				for(player *aux = players_head; aux != NULL; aux=aux->next) {
-					if(aux == me) continue;
-					else write(aux->socket, str, strlen(str));
-				}
+				write2all(me, str);
 
 				me->card1_x = -1;
 				me->card1_y = -1;
@@ -366,7 +332,6 @@ void interpret_final_msg(char final_msg[], player *me)
 
 			else {
 				printf("Impossible code number!");
-				pthread_mutex_unlock(&verify_card);
 			}
 
 		}
@@ -547,12 +512,18 @@ void *player_thread(void *arg)
 			else { // If the player disconnected (purposefully or otherwise) ...
 				printf("A player disconnected.\n");
 				removePlayer(me); // ... the player is removed from the list of connected players.
-			
-				if(nr_players <= 1) { // If there is one or zero players, the game ends.
-					
-					// DO STUFF!!!!
 
+				if(nr_players == 1) {
+					print("There's only 1 player in-game! Waiting for a second player...\n\n");
+					memset(str, 0, sizeof(str));
+					code = 17;
+					sprintf(str, "%d\n", code);
+					write2all(NULL, str);
 				}
+
+				if(nr_players == 0)
+					printf();
+
 				
 				pthread_exit(NULL); // ... and the thread is terminated.
 			}
@@ -561,6 +532,12 @@ void *player_thread(void *arg)
 		else { // If there's data to be read
 
 			printf("read %d: %s\n", n, str);
+			if(n >= 2) {
+
+			}
+			else {
+
+			}
 			
 			strcat(buffer, str);
 
@@ -618,7 +595,7 @@ void *end_game_thread(void *arg)
 	sprintf(str, "%d\n", code);
 	write(winner->socket, str, strlen(str));
 
-	// Notifies losers.
+	// Notifies losers. !!!!! VER DISTO !!!!!
 	memset(str, 0, sizeof(str));
 	code = 11;
 	sprintf(str, "%d\n", code);
@@ -642,9 +619,7 @@ void *end_game_thread(void *arg)
 	pthread_exit(NULL);
 }
 
-void destroy_mutexes() 
+void destroy_lock() 
 {
-	pthread_mutex_destroy(&lock_addPlayer);
-	pthread_mutex_destroy(&lock_removePlayer);
-	pthread_mutex_destroy(&verify_card);
+	pthread_rwlock_destroy(&lock_players);
 }

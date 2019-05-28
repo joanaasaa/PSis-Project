@@ -18,7 +18,7 @@ int check_terminate();
 
 int argumentControl(int argc, char const *argv[]);
 
-void init_mutexes();
+void init_lock();
 
 void addPlayer(int newfd);
 
@@ -36,4 +36,4 @@ void *player_thread(void *arg);
 
 void *end_game_thread(void *arg);
 
-void destroy_mutexes();
+void destroy_lock();
