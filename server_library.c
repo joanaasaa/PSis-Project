@@ -7,6 +7,7 @@ int dim_board;
 int found_pairs = 0; 
 int nr_players = 0;
 int terminate = 0;
+int waiting = 0;
 player *players_head = NULL; // List of in-game players.
 pthread_rwlock_t lock_players;
 pthread_t end_gameID;
@@ -136,6 +137,8 @@ void write2all(player *me, char str[])
 	}
 
 	pthread_rwlock_unlock(&lock_players);
+
+	printf("Wrote to all players: %s\n", str);
 }
 
 void interpret_final_msg(char final_msg[], player *me) 
@@ -145,7 +148,7 @@ void interpret_final_msg(char final_msg[], player *me)
 	char str[100];
 
 	strcpy(str, final_msg);
-	printf("Message Received : %s\n", str);
+	printf("Read: %s\n", str);
 	
 	if(sscanf(str, "-%d%*s", &code) == 1) {
 		printf("Received message with code -%d\n", code);
@@ -156,13 +159,14 @@ void interpret_final_msg(char final_msg[], player *me)
 				if(sscanf(str, "-%*d-%d-%d\n", &(me->card1_x), &(me->card1_y)) == 2) {
 					
 					printf("x: %d	y: %d\n", me->card1_x, me->card1_y);
-					printf("status: %c\n", get_card_status(me->card1_x, me->card1_y));
+					printf("Card: %s	Status: %c\n\n", get_card_str(me->card1_x, me->card1_y), get_card_status(me->card1_x, me->card1_y));
 
 					if(get_card_status(me->card1_x, me->card1_y) != 'd') {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
 						write(me->socket, str, strlen(str));
+						printf("Wrote: %s\n", str);
 						return;
 					}
 
@@ -182,6 +186,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					code = 5;
 					sprintf(str, "%d-%c%c\n", code, card1[0], card1[1]);
 					write(me->socket, str, strlen(str));
+					printf("Wrote: %s\n", str);
 
 					// Updates the other players.
 					memset(str, 0, sizeof(str));
@@ -190,18 +195,22 @@ void interpret_final_msg(char final_msg[], player *me)
 					write2all(me, str);
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 
 			else if(code == 2) {
 				if(sscanf(str, "-%*d-%d-%d\n", &(me->card2_x), &(me->card2_y)) == 2) {
+
+					printf("x: %d	y: %d\n", me->card2_x, me->card2_y);
+					printf("Card: %s	Status: %c\n\n", get_card_str(me->card2_x, me->card2_y), get_card_status(me->card2_x, me->card2_y));
 					
 					if(get_card_status(me->card2_x, me->card2_y) != 'd') {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
 						write(me->socket, str, strlen(str));
+						printf("Wrote: %s\n", str);
 						return;
 					}
 					
@@ -210,7 +219,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					strcpy(card2, get_card_str(me->card2_x, me->card2_y));
 
 					if(strcmp(card1, card2) == 0) {
-						printf("Cards match!\n");
+						printf("Cards match!\n\n");
 						found_pairs++;
 						printf("Nr. of pairs found: %d\n\n", found_pairs);
 
@@ -229,6 +238,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							code = 6;
 							sprintf(str, "%d\n", code);
 							write(me->socket, str, strlen(str));
+							printf("Wrote: %s\n", str);
 
 							// Updates the other players.
 							memset(str, 0, sizeof(str));
@@ -247,6 +257,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							code = 7;
 							sprintf(str, "%d\n", code);
 							write(me->socket, str, strlen(str));
+							printf("Wrote: %s\n", str);
 
 							// Updates the other players.
 							memset(str, 0, sizeof(str));
@@ -259,12 +270,14 @@ void interpret_final_msg(char final_msg[], player *me)
 							me->card2_x = -1;
 							me->card2_y = -1;
 
+							// AQUI!!!! --------------------------------------------
+
 							pthread_create(&end_gameID, NULL, end_game_thread, NULL);
 						}
 
 					}
 					else {
-						printf("Cards don't match.\n");
+						printf("Cards don't match.\n\n");
 
 						// Updates the matched cards' status in the board.
 						set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'f', me->rgb_R, me->rgb_G, me->rgb_B);
@@ -280,6 +293,7 @@ void interpret_final_msg(char final_msg[], player *me)
 						code = 8;
 						sprintf(str, "%d-%c%c\n", code, card2[0], card2[1]);
 						write(me->socket, str, strlen(str));
+						printf("Wrote: %s\n", str);
 
 						// Updates the other players.
 						memset(str, 0, sizeof(str));
@@ -289,7 +303,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					}	
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 
@@ -331,16 +345,16 @@ void interpret_final_msg(char final_msg[], player *me)
 			}
 
 			else {
-				printf("Impossible code number!");
+				printf("Impossible code number!\n\n");
 			}
 
 		}
 		else
-			printf("Game hasn't started yet. The server isn't supposed to be receiving messages from players!\n");
+			printf("Game hasn't started yet. The server isn't supposed to be receiving messages from players!\n\n");
 
 	} // End of if(sscanf(str, "%d%*s", &code) == 1).
 	else
-		printf("Couldn't read message!\n");
+		printf("Couldn't read message!\n\n");
 
 	return;
 }
@@ -368,7 +382,7 @@ void *stdinSocket_thread(void *arg)
 				terminate = 1;
 				pthread_exit(0);
 			}
-			else printf("Unsupported order!\n");
+			else printf("Unsupported order!\n\n");
 		}
 		
 	}
@@ -449,7 +463,7 @@ void *listenSocket_thread(void *arg)
 
 void *player_thread(void *arg)
 {
-	int n; // Aid variable.
+	int n, i; // Aid variable.
 	int code; // To store message's codes.
 	char card[3];
 	char *res_aux, buffer[200], final_msg[100], res[100];
@@ -472,15 +486,17 @@ void *player_thread(void *arg)
 	code = 9;
 	sprintf(str, "%d-%d-%d-%d-%d-%d\n", code, dim_board, game, me->rgb_R, me->rgb_G, me->rgb_B);
 	write(me->socket, str, strlen(str));
+	printf("Wrote: %s\n", str);
 
 	// Server sends the state of the board to new players.
-	if(nr_players > 2) { // This is only necessary if there are more than 2 players connected. Before that, changes to the board aren't possible.
+	if(nr_players > 2 || waiting == 1) { // This is only necessary if there are more than 2 players connected. Before that, changes to the board aren't possible.
 		for(int i=0; i<dim_board; i++){
 			for(int j=0; j<dim_board; j++) {
 				if(get_card_status(i, j) != 'd') {
 					str2 = get_str2send(i, j);
 					strcpy(str, str2);
 					write(me->socket, str, strlen(str));
+					printf("Wrote: %s\n", str);
 				}
 			}
 		}
@@ -489,16 +505,22 @@ void *player_thread(void *arg)
 		memset(str, 0, sizeof(str));
 		sprintf(str, "%d\n", code);
 		write(me->socket, str, strlen(str));
+		printf("Wrote: %s\n", str);
 	}
 
-	if((nr_players==2) && (game==0)) { // If there are 2 players connected but the game hasn't yet started ...
+	if(  nr_players==2 && (game==0 || waiting==1) ) { // If there are 2 players connected but the game hasn't yet started ...
 		game = 1; // ... the game starts.
 		
 		code = 12;
 		memset(str, 0, sizeof(str));
 		sprintf(str, "%d\n", code);
 		write(me->next->socket, str, strlen(str)); // Tells the player who first connected to start playing.
-		write(me->socket, str, strlen(str)); // Tells the second player to start playing.
+		printf("Wrote: %s\n", str);
+		
+		if(waiting != 1) {
+			write(me->socket, str, strlen(str)); // Tells the second player to start playing.
+			printf("Wrote: %s\n", str);
+		}
 	}
 
 	while(!terminate) { // Server waits for player's decesion.
@@ -510,20 +532,24 @@ void *player_thread(void *arg)
 				continue; // ... there wasn't actually an error. Loop continues.
 			}
 			else { // If the player disconnected (purposefully or otherwise) ...
-				printf("A player disconnected.\n");
+				printf("A player disconnected.\n\n");
 				removePlayer(me); // ... the player is removed from the list of connected players.
 
 				if(nr_players == 1) {
-					print("There's only 1 player in-game! Waiting for a second player...\n\n");
+					waiting = 1;
+	
 					memset(str, 0, sizeof(str));
 					code = 17;
 					sprintf(str, "%d\n", code);
 					write2all(NULL, str);
+
+					printf("There's only 1 player in-game! Waiting for a second player...\n\n");
 				}
 
-				if(nr_players == 0)
-					printf();
-
+				if(nr_players == 0) {
+					waiting = 1;
+					printf("There are 0 players in-game. Waiting for 2 players to join...\n\n");
+				}
 				
 				pthread_exit(NULL); // ... and the thread is terminated.
 			}
@@ -531,14 +557,6 @@ void *player_thread(void *arg)
 		}
 		else { // If there's data to be read
 
-			printf("read %d: %s\n", n, str);
-			if(n >= 2) {
-
-			}
-			else {
-
-			}
-			
 			strcat(buffer, str);
 
 			res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
@@ -548,7 +566,6 @@ void *player_thread(void *arg)
 				strcpy(res, res_aux);
 
 				memset(final_msg, 0, sizeof(final_msg));
-				int i=0;
 				for(i=0; buffer[i] != '\n'; i++) {
 					final_msg[i] = buffer[i];
 				}
@@ -566,13 +583,14 @@ void *player_thread(void *arg)
 		} // End of else for read's n (n>0).
 	} // End of while.
 
-	printf("A player terminated.\n");
+	printf("A player terminated.\n\n");
 	removePlayer(me);
 	pthread_exit(0);
 }
 
 void *end_game_thread(void *arg) 
 {
+	int code;
 	char str[5];
 	player *winner = NULL;
 	time_t aux_10seconds, now;
@@ -591,9 +609,10 @@ void *end_game_thread(void *arg)
 
 	// Sends message to winner.
 	memset(str, 0, sizeof(str));
-	int code = 10;
+	code = 10;
 	sprintf(str, "%d\n", code);
 	write(winner->socket, str, strlen(str));
+	printf("Wrote: %s\n", str);
 
 	// Notifies losers. !!!!! VER DISTO !!!!!
 	memset(str, 0, sizeof(str));
@@ -607,6 +626,8 @@ void *end_game_thread(void *arg)
 		aux->card2_y = -1;
 		if(aux == winner) continue;
 		else write(aux->socket, str, strlen(str));
+
+		printf("Wrote to losers: %s\n", str);
 	}
 
 	clear_board();

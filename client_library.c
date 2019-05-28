@@ -75,7 +75,7 @@ void interpret_final_msg(char final_msg[])
 	char status;
 
 	strcpy(str, final_msg);
-	printf("Message Received : %s\n", str);
+	printf("Read: %s\n", str);
 
 	if(sscanf(str, "%d%*s", &code) == 1) {
 		printf("Received message with code %d\n\n", code);
@@ -86,7 +86,7 @@ void interpret_final_msg(char final_msg[])
 				if(sscanf(str, "%*d-%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
 					if(game == 0) { // There's only one player connected. We have to wait for another one to join.
 						game = 2; // The player has to wait for a "start\n" message.
-						printf("Waiting for a second player...\n");
+						printf("Waiting for a second player...\n\n");
 					}
 					else if(game == 1) { 
 						if(waiting != 3) { // The player joined in the middle of a game. (If waiting == 3 it means the player was already playing and this is a new game).
@@ -108,11 +108,11 @@ void interpret_final_msg(char final_msg[])
 					graphics = 1;
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 			else {
-				printf("Impossible code number!");
+				printf("Impossible code number!\n\n");
 			}
 
 		}
@@ -121,10 +121,13 @@ void interpret_final_msg(char final_msg[])
 			
 			if(code == 12) {
 				game = 1;
-				printf("Start palying!\n");
+				if(game == 0)
+					printf("Start palying!\n\n");
+				if(game == 2)
+					printf("Continue playing!\n\n");	
 			}
 			else {
-				printf("Impossible code number!");
+				printf("Impossible code number!\n\n");
 			}
 		}
 
@@ -144,7 +147,7 @@ void interpret_final_msg(char final_msg[])
 					}
 				}
 				else {
-					printf("Player wasn't waiting for feedback from server!");
+					printf("Player wasn't waiting for feedback from server!\n\n");
 				}
 			}
 
@@ -155,7 +158,7 @@ void interpret_final_msg(char final_msg[])
 					write_card(print_x1, print_y1, print_str1, 200, 200, 200); // Paints the letters on the card grey.
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n");
 				}
 			}
 
@@ -331,6 +334,11 @@ void interpret_final_msg(char final_msg[])
 
 			}
 
+			else if(code == 17) {
+				game = 2;
+				printf("You're the only player in-game. Waiting for a second player to join...\n\n");
+			}
+
 			else {
 				printf("Impossible code number!\n\n");
 			}
@@ -375,6 +383,7 @@ void *thread_read(void *arg)
 				code = -4;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
+				printf("Sent: %s\n", str);
 			}
 		}
 
@@ -392,6 +401,7 @@ void *thread_read(void *arg)
 				code = -3;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
+				printf("Sent: %s\n", str);
 			}
 		}
 
@@ -466,6 +476,7 @@ void *thread_write(void *arg)
 									code = -3; // Send message to the server as if the 5 seconds have passed.
 									sprintf(str, "%d\n", code);
 									write(fd, str, strlen(str));
+									printf("Sent: %s\n", str);
 								}
 							}
 
@@ -479,13 +490,13 @@ void *thread_write(void *arg)
 
 						get_board_card(event.button.x, event.button.y, &card_x_aux, &card_y_aux);
 
-						if(count_2seconds==1 || waiting!=0) // If a player is blocked after a bad choice or is waiting for feedback on play or is waiting for board cards (when joining in the middle of a game).
+						if(count_2seconds == 1 || waiting != 0) // If a player is blocked after a bad choice or is waiting for feedback on play or is waiting for board cards (when joining in the middle of a game).
 							printf("Wait!\n");
 						else { // If the player's not blocked.
-							if(game==2)
-								printf("Can't select any cards yet! Still waiting for a 2nd player to join.");
+							if(game == 2)
+								printf("Can't select any cards yet! Still waiting for a 2nd player to join.\n\n");
 
-							if(game==1) {
+							if(game == 1) {
 								if(card1_x == -1) { // If this is the first choice, in a play.
 									card1_x = card_x_aux;
 									card1_y = card_y_aux;
@@ -494,6 +505,7 @@ void *thread_write(void *arg)
 									code = -1;
 									sprintf(str, "%d-%d-%d\n", code, card1_x, card1_y);
 									write(fd, str, strlen(str));
+									printf("Sent: %s\n", str);
 
 									waiting = 1; // Player is waiting for server's feedback on choice.
 								}
@@ -508,6 +520,7 @@ void *thread_write(void *arg)
 									code = -2;
 									sprintf(str, "%d-%d-%d\n", code, card2_x, card2_y);
 									write(fd, str, strlen(str));
+									printf("Sent: %s\n", str);
 
 									waiting = 1; // Player is waiting for server's feedback on choice.
 								}
