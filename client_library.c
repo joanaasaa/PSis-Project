@@ -70,18 +70,15 @@ void interpret_final_msg(char final_msg[])
 	int print_x1, print_y1, print_x2, print_y2;
 	int print_R, print_G, print_B;
 	int final_score;
-	char str[50];
+	char str[100];
 	char print_str1[3], print_str2[3];
 	char status;
 
-	printf("str1 = %s\n", str);
-	int a = sscanf(str, "%d%*s", &code);
-	printf("str = %s\n", str);
-	printf("CODE = %d\n", code);
-	printf("sscanf returned: %d\n", a);
+	strcpy(str, final_msg);
+	printf("Message Received : %s\n", str);
 
-	if(sscanf(str, "%d%*s", &code) == -1) {
-		printf("Received message with code %d\n", code);
+	if(sscanf(str, "%d%*s", &code) == 1) {
+		printf("Received message with code %d\n\n", code);
 
 		if(game == 0) {
 			
@@ -99,7 +96,7 @@ void interpret_final_msg(char final_msg[])
 
 					// Print initial board on screen:
 					if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-						printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+						printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 						exit(-1);
 					}
 					if(TTF_Init() == -1) {
@@ -190,7 +187,7 @@ void interpret_final_msg(char final_msg[])
 					write_card(print_x2, print_y2, print_str2, 255, 0, 0); // Paints the letters on the card red.
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 
@@ -206,11 +203,11 @@ void interpret_final_msg(char final_msg[])
 						count_5seconds = 1; // Starts counting the time until our next play
 					}
 					else {
-						printf("Bad message from server!");
+						printf("Bad message from server!\n\n");
 					}
 				}
 				else {
-					printf("Player wasn't waiting for feedback from server!");
+					printf("Player wasn't waiting for feedback from server!\n\n");
 				}
 			}
 
@@ -230,12 +227,12 @@ void interpret_final_msg(char final_msg[])
 					memset(card2, 0, sizeof(card2));
 
 					if(code == 7) {
-						printf("Awaiting game results...\n");
+						printf("Awaiting game results...\n\n");
 						waiting = -1;
 					}
 				}
 				else {
-					printf("Player wasn't waiting for feedback from server!");
+					printf("Player wasn't waiting for feedback from server!\n\n");
 				}
 			}
 
@@ -248,22 +245,16 @@ void interpret_final_msg(char final_msg[])
 						write_card(card1_x, card1_y, card1, 255, 0, 0); // Paints the letters on the card red.
 						paint_card(card2_x, card2_y, me.rgb_R, me.rgb_G, me.rgb_B); // Paints the card's backgroud with our color.
 						write_card(card2_x, card2_y, card2, 255, 0, 0); // Paints the letters on the card red.
-						card1_x = -1;
-						card1_y = -1;
-						card2_x = -1;
-						card2_y = -1;
-						memset(card1, 0, sizeof(card1));
-						memset(card2, 0, sizeof(card2));
 
 						aux_2seconds = time(NULL); 
 						count_2seconds = 1; // Starts counting the time until we're unblocked from playing.
 					}
 					else {
-						printf("Bad message from server!");
+						printf("Bad message from server!\n\n");
 					}
 				}
 				else {
-					printf("Player wasn't waiting for feedback from server!");
+					printf("Player wasn't waiting for feedback from server!\n\n");
 				}
 			}
 
@@ -272,9 +263,9 @@ void interpret_final_msg(char final_msg[])
 					//waiting = 0; //VER ABAIXO: WAITING = 3.
 					if(sscanf(str, "%*d-%d\n", &final_score) == 1) {
 						if(code == 10)
-							printf("Congratualations, winner!\n");
+							printf("Congratualations, winner!\n\n");
 						else // code == 11
-							printf("Bummer, you lost... Better luck next time!\n");
+							printf("Bummer, you lost... Better luck next time!\n\n");
 						
 						printf("Your final score: %d\n", final_score);
 
@@ -285,11 +276,11 @@ void interpret_final_msg(char final_msg[])
 						waiting = 3; // Waits for a new game to start.
 					}
 					else {
-						printf("Bad message from server!");
+						printf("Bad message from server!\n\n");
 					}
 				}
 				else {
-					printf("Player wasn't waiting for feedback from server!");
+					printf("Player wasn't waiting for feedback from server!\n\n");
 				}
 			}
 
@@ -298,7 +289,7 @@ void interpret_final_msg(char final_msg[])
 					paint_card(print_x1, print_y1, 255, 255, 255); // Paints the card white.
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 
@@ -308,7 +299,7 @@ void interpret_final_msg(char final_msg[])
 					paint_card(print_x2, print_y2, 255, 255, 255); // Paints the card white.
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 			}
 
@@ -332,22 +323,23 @@ void interpret_final_msg(char final_msg[])
 					}
 				}
 				else {
-					printf("Bad message from server!");
+					printf("Bad message from server!\n\n");
 				}
 				
-				if(code == 16) waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
+				if(code == 16) 
+					waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
 
 			}
 
 			else {
-				printf("Impossible code number!");
+				printf("Impossible code number!\n\n");
 			}
 
 		} // End of game = 1.
 
 	} // End of if(sscanf(str, "%d%*s", &code) == -1).
 	else
-		printf("Couldn't read message!\n");
+		printf("Couldn't read message!\n\n");
 
 	return;
 } // End of function.
@@ -361,8 +353,8 @@ void *thread_read(void *arg)
 	time_t now;
 
 	memset(buffer, 0, sizeof(buffer));
-	memset(final_msg, 0, sizeof(buffer));
-	memset(res, 0, sizeof(buffer));
+	memset(final_msg, 0, sizeof(final_msg));
+	memset(res, 0, sizeof(res));
 
 	while(!terminate) {
 
@@ -370,9 +362,17 @@ void *thread_read(void *arg)
 			now = time(NULL);
 			if(now - aux_2seconds >= 2) { 
 				count_2seconds = 0; // No need to keep counting.
+
+				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
+				paint_card(card2_x, card2_y, 255, 255, 255); // Paints the card' white.
+
+				card1_x = -1; // The first play is undone.
+				card1_y = -1; // The first play is undone.
+				card2_x = -1; // The first play is undone.
+				card2_y = -1; // The first play is undone.
 				
 				memset(str, 0, sizeof(str));
-				code = -4;
+				code = 20;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
 			}
@@ -382,11 +382,14 @@ void *thread_read(void *arg)
 			now = time(NULL);
 			if(now - aux_5seconds >= 5) { 
 				count_5seconds = 0; // No need to keep counting.
+
+				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
+
 				card1_x = -1; // The first play is undone.
 				card1_y = -1; // The first play is undone.
 				
 				memset(str, 0, sizeof(str));
-				code = -3;
+				code = 19;
 				sprintf(str, "%d\n", code);
 				write(fd, str, strlen(str));
 			}
@@ -405,8 +408,6 @@ void *thread_read(void *arg)
 			}
 		}
 		else {
-			printf("read %d: %s\n", n, str);
-			
 			strcat(buffer, str);
 
 			res_aux = strstr(buffer, "\n"); // res_aux is pointing to "\n"'s first occurance in buffer.
@@ -490,7 +491,7 @@ void *thread_write(void *arg)
 									card1_y = card_y_aux;
 
 									memset(str, 0, sizeof(str));
-									code = -1;
+									code = 17;
 									sprintf(str, "%d-%d-%d\n", code, card1_x, card1_y);
 									write(fd, str, strlen(str));
 
@@ -504,7 +505,7 @@ void *thread_write(void *arg)
 									card2_y = card_y_aux;
 
 									memset(str, 0, sizeof(str));
-									code = -2;
+									code = 18;
 									sprintf(str, "%d-%d-%d\n", code, card2_x, card2_y);
 									write(fd, str, strlen(str));
 

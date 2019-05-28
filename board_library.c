@@ -58,9 +58,15 @@ void init_board(int dim) {
 			} while(str_place[0] != '\0'); // Enquanto os lugares no tabuleiro já tiverem uma string associada.
 
 			// Associa-se uma string ao lugar encontrado (que anterioremente não tinha string).
+			/*
 			str_place[0] = c1;
 			str_place[1] = c2;
 			str_place[2] = '\0';
+			*/
+			board[linear_conv(i,j)].v[0] = c1;
+			board[linear_conv(i,j)].v[1] = c2;
+			board[linear_conv(i,j)].v[2] = '\0';
+			board[linear_conv(i,j)].status = 'd';
 
 			// Procura-se outro lugar no tabuleiro que ainda não tenha string, para ser o par.
 			do {
@@ -71,14 +77,20 @@ void init_board(int dim) {
 			} while(str_place[0] != '\0');
 
 			// Atribui a mesma string a esse lugar.
+			/*
 			str_place[0] = c1;
 			str_place[1] = c2;
 			str_place[2] = '\0';
+			*/
+			board[linear_conv(i,j)].v[0] = c1;
+			board[linear_conv(i,j)].v[1] = c2;
+			board[linear_conv(i,j)].v[2] = '\0';
+			board[linear_conv(i,j)].status = 'd';
 
 			count += 2;
 			if(count == dim_board*dim_board) {
 				for(i=0; i < (dim_board * dim_board); i++) { // Imprime o conteúdo de todas as strings.
-					printf("carta %d: %s\n", i, board[i].v);
+					printf("carta %d: %s - %c\n", i, board[i].v, board[i].status);
 				}
 				return; // Se já todas as cartas têm valores atribuídos, retorna.
 			}

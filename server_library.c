@@ -8,7 +8,9 @@ int found_pairs = 0;
 int nr_players = 0;
 int terminate = 0;
 player *players_head = NULL; // List of in-game players.
-pthread_mutex_t lock_addPlayer, lock_removePlayer, verify_card;
+pthread_mutex_t lock_addPlayer = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock_removePlayer = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t verify_card = PTHREAD_MUTEX_INITIALIZER;
 pthread_t end_gameID;
 
 int check_terminate()
@@ -137,9 +139,12 @@ void removePlayer(player *toRemove)
 
 void interpret_final_msg(char final_msg[], player *me) 
 {
-	int code;
+	int code, aux;
 	char card1[3], card2[3];
 	char str[100];
+
+	strcpy(str, final_msg);
+	printf("Message Received : %s\n", str);
 	
 	if(sscanf(str, "%d%*s", &code) == 1) {
 		printf("Received message with code %d\n", code);
@@ -148,8 +153,11 @@ void interpret_final_msg(char final_msg[], player *me)
 
 			pthread_mutex_lock(&verify_card); 
 			
-			if(code == -1) {
-				if(sscanf(str, "%*d-%d-%d\n", &(me->card1_x), &(me->card1_x)) == 2) {
+			if(code == 17) {
+				if(sscanf(str, "%*d-%d-%d\n", &(me->card1_x), &(me->card1_y)) == 2) {
+					
+					printf("x: %d	y: %d\n", me->card1_x, me->card1_y);
+					printf("status: %c\n", get_card_status(me->card1_x, me->card1_y));
 
 					if(get_card_status(me->card1_x, me->card1_y) != 'd') {
 						memset(str, 0, sizeof(str));
@@ -193,8 +201,8 @@ void interpret_final_msg(char final_msg[], player *me)
 				}
 			}
 
-			else if(code == -2) {
-				if(sscanf(str, "%*d-%d-%d\n", &(me->card2_x), &(me->card2_x)) == 2) {
+			else if(code == 18) {
+				if(sscanf(str, "%*d-%d-%d\n", &(me->card2_x), &(me->card2_y)) == 2) {
 					
 					if(get_card_status(me->card2_x, me->card2_y) != 'd') {
 						memset(str, 0, sizeof(str));
@@ -212,6 +220,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					if(strcmp(card1, card2) == 0) {
 						printf("Cards match!\n");
 						found_pairs++;
+						printf("Nr. of pairs found: %d\n\n", found_pairs);
 
 						// Updates the matched cards' status in the board.
 						set_card_traits(me->card1_x, me->card1_y, 'l', me->rgb_R, me->rgb_G, me->rgb_B);
@@ -222,10 +231,10 @@ void interpret_final_msg(char final_msg[], player *me)
 						// Server updates its own graphics.
 						paint_card(me->card1_x, me->card1_y, me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
 						write_card(me->card1_x, me->card1_y, card1, 0, 0, 0); // Paints the letters on the card black.
-						paint_card(me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
+						paint_card(me->card2_x, me->card2_y,me->rgb_R, me->rgb_G, me->rgb_B); // Paints the card's backgroud with the player's color.
 						write_card(me->card2_x, me->card2_y, card2, 0, 0, 0); // Paints the letters on the card black.
 
-						if(found_pairs != dim_board) { // If all pairs haven't been found yet.
+						if(found_pairs != ((dim_board*dim_board)/2)) { // If all pairs haven't been found yet.
 							// Gives the player feedback.
 							memset(str, 0, sizeof(str));
 							code = 6;
@@ -289,13 +298,13 @@ void interpret_final_msg(char final_msg[], player *me)
 						// Gives the player feedback.
 						memset(str, 0, sizeof(str));
 						code = 8;
-						sprintf(str, "%d-%c%c\n", code, card1[0], card1[1]);
+						sprintf(str, "%d-%c%c\n", code, card2[0], card2[1]);
 						write(me->socket, str, strlen(str));
 
 						// Updates the other players.
 						memset(str, 0, sizeof(str));
 						code = 4;
-						sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
+						sprintf(str, "%d-%c%c-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1[0], card1[1], card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
 						for(player *aux = players_head; aux != NULL; aux=aux->next) {
 							if(aux == me) continue;
 							else write(aux->socket, str, strlen(str));
@@ -307,7 +316,7 @@ void interpret_final_msg(char final_msg[], player *me)
 				}
 			}
 
-			else if(code == -3) {
+			else if(code == 19) {
 				// Sets the card's status to down (d).
 				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
 
@@ -329,7 +338,7 @@ void interpret_final_msg(char final_msg[], player *me)
 				me->card1_y = -1;
 			}
 
-			else if(code == -4) {	
+			else if(code == 20) {	
 				// Sets the card's status to down (d).
 				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
 				set_card_traits(me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
@@ -485,8 +494,8 @@ void *player_thread(void *arg)
 
 	memset(card, 0, sizeof(card));
 	memset(buffer, 0, sizeof(buffer));
-	memset(final_msg, 0, sizeof(buffer));
-	memset(res, 0, sizeof(buffer));
+	memset(final_msg, 0, sizeof(final_msg));
+	memset(res, 0, sizeof(res));
 
 	me->card1_x = -1;
 	me->card1_y = -1;
