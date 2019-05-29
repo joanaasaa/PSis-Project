@@ -69,7 +69,6 @@ char get_card_status(int i, int j) {
 void clear_board(){
 	free(board);
 	board = NULL;
-	return;
 }
 
 void init_board(int dim) {

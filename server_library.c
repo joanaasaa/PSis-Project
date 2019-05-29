@@ -7,14 +7,15 @@ int dim_board;
 int found_pairs = 0; 
 int nr_players = 0;
 int terminate = 0;
-int waiting = 0;
 player *players_head = NULL; // List of in-game players.
 pthread_rwlock_t lock_players;
-pthread_t end_gameID;
 
-int check_terminate()
-{
+int get_terminate() {
 	return terminate;
+}
+
+void set_terminate() {
+	terminate = 1;
 }
 
 int argumentControl(int argc, char const *argv[]) {
@@ -51,6 +52,10 @@ void init_lock()
         printf("Lock initialization failed!\n"); 
         exit(-1); 
     }
+}
+
+void destroy_lock() {
+	pthread_rwlock_destroy(&lock_players);
 }
 
 void addPlayer(int newfd)
@@ -90,8 +95,6 @@ void addPlayer(int newfd)
 	printf("A new player is now connected.\n");
 
 	pthread_create(&(players_aux->threadID), NULL, player_thread, players_aux);
-
-	return;
 }
 
 void removePlayer(player *toRemove) 
@@ -125,6 +128,90 @@ void removePlayer(player *toRemove)
 	return;
 }
 
+void *stdinSocket_thread(void *arg)
+{
+	int n;
+	int fd_stdin = 0; // Keyboard's file descriptor.
+	char str[20]; // String for commands from keyboard.
+
+	int flags = fcntl(fd_stdin, F_GETFL, 0);
+	fcntl(fd_stdin, F_SETFL, flags | O_NONBLOCK);
+
+	while(terminate != 1) {
+		memset(str, 0, sizeof(str));
+
+		n = read(fd_stdin, &str, sizeof(str));
+		if(n<=0){
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) {//  If there was an error because there wasn't data to be read ...
+				continue; // ... there wasn't actually an error. Loop continues.
+			}
+		}
+		else {
+			if(strcmp(str, "exit\n") == 0) {
+				terminate = 1;
+				pthread_exit(NULL);
+			}
+			else printf("Unsupported order!\n\n");
+		}
+		
+	}
+
+	pthread_exit(NULL);
+}
+
+void *listenSocket_thread(void *arg)
+{
+	int n; // Aid variable. 
+	int fd; // Listen socket's file descriptor.
+	char str[20]; // String for messages.
+	struct sockaddr_in server_addr, client_addr;
+	unsigned int client_addrlen;
+	player *players_aux; // Auxiliary pointer to deal with players' list handling.
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(SERVER_PORT);
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+
+	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
+											// SOCK_STREAM: Stream socket. Connection oriented.
+	if(fd<0) {
+		perror("socket");
+		exit(-1);
+  	}
+	
+	int flags = fcntl(fd, F_GETFL, 0);
+  	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+  	 
+	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
+  	if(n<0) {
+		perror("bind");
+		exit(-1);
+ 	}
+
+  	printf("Socket created and binded!\n");
+  	listen(fd, 5);
+
+	while(terminate != 1) {	
+		
+		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
+		if(newfd <= 0) { // If there was an error accepting the new player.
+			if(errno == EAGAIN || errno == EWOULDBLOCK) // If the error happened because there was no connection to accept ...
+				continue; // ... the loop continues.
+			else { // If the error was of another type, the player isn't added to the list of players.
+				perror("accept");
+				printf("Unnable to accept player!\n");
+			}
+		}
+		else addPlayer(newfd);
+	}
+
+	close(fd);
+
+	while(1) { // Waits for all players to disconnect, before exiting.
+		if(nr_players == 0) pthread_exit(NULL);
+	}
+}
+
 void write2all(player *me, char str[])
 {
 	player *aux = NULL;
@@ -153,7 +240,7 @@ void interpret_final_msg(char final_msg[], player *me)
 	if(sscanf(str, "-%d%*s", &code) == 1) {
 		printf("Received message with code -%d\n", code);
 
-		if(game == 1) { 
+		if(game == 1) { // The server can only receive messages when the game is active.
 			
 			if(code == 1) {
 				if(sscanf(str, "-%*d-%d-%d\n", &(me->card1_x), &(me->card1_y)) == 2) {
@@ -219,7 +306,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					strcpy(card2, get_card_str(me->card2_x, me->card2_y));
 
 					if(strcmp(card1, card2) == 0) {
-						printf("Cards match!\n\n");
+						printf("Cards match!\n");
 						found_pairs++;
 						printf("Nr. of pairs found: %d\n\n", found_pairs);
 
@@ -272,7 +359,9 @@ void interpret_final_msg(char final_msg[], player *me)
 
 							// AQUI!!!! --------------------------------------------
 
-							pthread_create(&end_gameID, NULL, end_game_thread, NULL);
+							terminate = 2;
+							game = 0;
+							// pthread_create(&end_gameID, NULL, end_game_thread, NULL);
 						}
 
 					}
@@ -359,108 +448,6 @@ void interpret_final_msg(char final_msg[], player *me)
 	return;
 }
 
-void *stdinSocket_thread(void *arg)
-{
-	int n;
-	int fd_stdin = 0; // Keyboard's file descriptor.
-	char str[20]; // String for commands from keyboard.
-
-	int flags = fcntl(fd_stdin, F_GETFL, 0);
-	fcntl(fd_stdin, F_SETFL, flags | O_NONBLOCK);
-
-	while(!terminate) {
-		memset(str, 0, sizeof(str));
-
-		n = read(fd_stdin, &str, sizeof(str));
-		if(n<=0){
-			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) {//  If there was an error because there wasn't data to be read ...
-				continue; // ... there wasn't actually an error. Loop continues.
-			}
-		}
-		else {
-			if(strcmp(str, "exit\n") == 0) {
-				terminate = 1;
-				pthread_exit(0);
-			}
-			else printf("Unsupported order!\n\n");
-		}
-		
-	}
-
-	pthread_exit(NULL);
-}
-
-void *checkTimer_thread(void *arg) // AND GRAPHICS
-{
-	int server_duration = 1200; // The server will be running for 20 minutes.
-	time_t start_time, aux_time; 
-
-	start_time = time(NULL);
-
-	while(!terminate){
-		aux_time = time(NULL);
-		if((aux_time - start_time) >= server_duration) {
-			terminate = 1;
-			pthread_exit(0);
-		}	
-	}
-	
-	pthread_exit(0);
-
-}
-
-void *listenSocket_thread(void *arg)
-{
-	int n; // Aid variable. 
-	int fd; // Listen socket's file descriptor.
-	char str[20]; // String for messages.
-	struct sockaddr_in server_addr, client_addr;
-	unsigned int client_addrlen;
-	player *players_aux; // Auxiliary pointer to deal with players' list handling.
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(SERVER_PORT);
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-
-	fd = socket(AF_INET, SOCK_STREAM, 0); 	// AF_INET: Socket for communication between diffrent machines;
-											// SOCK_STREAM: Stream socket. Connection oriented.
-	if(fd<0) {
-		perror("socket");
-		exit(-1);
-  	}
-	
-	int flags = fcntl(fd, F_GETFL, 0);
-  	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-  	 
-	n = bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr));
-  	if(n<0) {
-		perror("bind");
-		exit(-1);
- 	}
-
-  	printf("Socket created and binded!\n");
-  	listen(fd, 5);
-
-	while(!terminate) {	
-		int newfd = accept(fd, (struct sockaddr *) &client_addr, &client_addrlen);
-		if(newfd <= 0) { // If there was an error accepting the new player.
-			if(errno == EAGAIN || errno == EWOULDBLOCK) // If the error happened because there was no connection to accept ...
-				continue; // ... the loop continues.
-			else { // If the error was of another type, the player isn't added to the list of players.
-				perror("accept");
-				printf("Unnable to accept player!\n");
-			}
-		}
-		else addPlayer(newfd);
-	}
-
-	close(fd);
-
-	while(1) { // Waits for all players to disconnect, before exiting.
-		if(nr_players == 0) pthread_exit(0);
-	}
-}
-
 void *player_thread(void *arg)
 {
 	int n, i; // Aid variable.
@@ -489,7 +476,7 @@ void *player_thread(void *arg)
 	printf("Wrote: %s\n", str);
 
 	// Server sends the state of the board to new players.
-	if(nr_players > 2 || waiting == 1) { // This is only necessary if there are more than 2 players connected. Before that, changes to the board aren't possible.
+	if(nr_players > 2 || game == 2) { // This is only necessary if there are more than 2 players connected. Before that, changes to the board aren't possible.
 		for(int i=0; i<dim_board; i++){
 			for(int j=0; j<dim_board; j++) {
 				if(get_card_status(i, j) != 'd') {
@@ -508,22 +495,22 @@ void *player_thread(void *arg)
 		printf("Wrote: %s\n", str);
 	}
 
-	if(  nr_players==2 && (game==0 || waiting==1) ) { // If there are 2 players connected but the game hasn't yet started ...
-		game = 1; // ... the game starts.
+	if( nr_players==2 && (game==0 || game == 2) ) { // If there are 2 players connected but the game hasn't yet started or was frozen ...
 		
+		game = 1; // ... the game starts.
+
 		code = 12;
 		memset(str, 0, sizeof(str));
 		sprintf(str, "%d\n", code);
-		write(me->next->socket, str, strlen(str)); // Tells the player who first connected to start playing.
+		write(me->next->socket, str, strlen(str)); 	// game=0: Tells the player who first connected to start playing.
+													// game=2: Tells the player who stayed connected with the game frozen, to continue playing.
 		printf("Wrote: %s\n", str);
 		
-		if(waiting != 1) {
-			write(me->socket, str, strlen(str)); // Tells the second player to start playing.
-			printf("Wrote: %s\n", str);
-		}
+		write(me->socket, str, strlen(str)); // Tells the second player to start playing.
+		printf("Wrote: %s\n", str);
 	}
 
-	while(!terminate) { // Server waits for player's decesion.
+	while(terminate != 1) { // Server waits for player's decesion.
 		memset(str, 0, sizeof(str));
 	
 		n = read(me->socket, str, sizeof(str));
@@ -536,7 +523,7 @@ void *player_thread(void *arg)
 				removePlayer(me); // ... the player is removed from the list of connected players.
 
 				if(nr_players == 1) {
-					waiting = 1;
+					game = 2;
 	
 					memset(str, 0, sizeof(str));
 					code = 17;
@@ -547,7 +534,7 @@ void *player_thread(void *arg)
 				}
 
 				if(nr_players == 0) {
-					waiting = 1;
+					game = 2;
 					printf("There are 0 players in-game. Waiting for 2 players to join...\n\n");
 				}
 				
@@ -556,6 +543,11 @@ void *player_thread(void *arg)
 			
 		}
 		else { // If there's data to be read
+
+			if(terminate == 2) {
+				printf("Can't read since there's no game going-on!\n\n");
+				continue;
+			}
 
 			strcat(buffer, str);
 
@@ -585,28 +577,42 @@ void *player_thread(void *arg)
 
 	printf("A player terminated.\n\n");
 	removePlayer(me);
-	pthread_exit(0);
+	pthread_exit(NULL);
 }
 
-void *end_game_thread(void *arg) 
+void *endGame_thread(void *arg) 
 {
+	printf("aqui0\n");
+	
 	int code;
-	char str[5];
+	char str[50];
 	player *winner = NULL;
 	time_t aux_10seconds, now;
 
+	printf("aqui1\n");
+
 	aux_10seconds = time(NULL);
+
+	printf("aqui2\n");
+
+	pthread_rwlock_rdlock(&lock_players);
 
 	// Server searches for winner.
 	for(player* aux = players_head; aux != NULL; aux = aux->next) {
-		if(winner == NULL)
-			aux = winner;
+		printf("aqui3\n");
+		if(winner == NULL) {
+			printf("OLA\n");
+			winner = aux;
+			printf("OLASINHO 2\n");
+		}
+			
 		else {
+			printf("HELLO\n");
 			if(winner->score < aux->score) 
 				winner = aux;
 		}
 	}
-
+	printf("aqui4\n");
 	// Sends message to winner.
 	memset(str, 0, sizeof(str));
 	code = 10;
@@ -614,10 +620,15 @@ void *end_game_thread(void *arg)
 	write(winner->socket, str, strlen(str));
 	printf("Wrote: %s\n", str);
 
+	printf("aqui5\n");
+
 	// Notifies losers. !!!!! VER DISTO !!!!!
 	memset(str, 0, sizeof(str));
 	code = 11;
 	sprintf(str, "%d\n", code);
+
+	printf("aqui6\n");
+
 	for(player* aux = players_head; aux != NULL; aux = aux->next) {
 		aux->score = 0;
 		aux->card1_x = -1;
@@ -630,6 +641,8 @@ void *end_game_thread(void *arg)
 		printf("Wrote to losers: %s\n", str);
 	}
 
+	pthread_rwlock_unlock(&lock_players);
+
 	clear_board();
 	close_board_windows();
 
@@ -637,10 +650,23 @@ void *end_game_thread(void *arg)
 	while(now - aux_10seconds <= 10)
 		now = time(NULL);
 	
-	pthread_exit(NULL);
-}
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+		exit(-1);
+	}
+	if(TTF_Init() == -1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+		exit(-1);
+	}
+	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // GRAPHICS
+	init_board(dim_board);
 
-void destroy_lock() 
-{
-	pthread_rwlock_destroy(&lock_players);
+	memset(str, 0, sizeof(str));
+	code = 12;
+	sprintf(str, "%d\n", code);
+	write2all(NULL, str);
+
+	terminate = 0;
+	
+	pthread_exit(NULL);
 }

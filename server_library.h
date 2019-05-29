@@ -14,26 +14,28 @@ typedef struct player {
     struct player *next;
 } player;
 
-int check_terminate();
+int get_terminate();
+
+void set_terminate();
 
 int argumentControl(int argc, char const *argv[]);
 
 void init_lock();
 
+void destroy_lock();
+
 void addPlayer(int newfd);
 
 void removePlayer(player *toRemove);
 
-void interpret_final_msg(char final_msg[], player *me);
-
 void *stdinSocket_thread(void *arg);
-
-void *checkTimer_thread(void *arg);
 
 void *listenSocket_thread(void *arg);
 
+void write2all(player *me, char str[]);
+
+void interpret_final_msg(char final_msg[], player *me);
+
 void *player_thread(void *arg);
 
-void *end_game_thread(void *arg);
-
-void destroy_lock();
+void *endGame_thread(void *arg);
