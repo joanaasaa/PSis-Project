@@ -106,6 +106,13 @@ void removePlayer(player *toRemove)
 	close(toRemove->socket); // Closing player's socket.
 
 	if(toRemove->count_2seconds == 1) {
+		// Sets the card's status to down (d).
+		set_pair_traits(toRemove->card1_x, toRemove->card1_y, toRemove->card2_x, toRemove->card2_y, 'd', toRemove->rgb_R, toRemove->rgb_G, toRemove->rgb_B);
+
+		// Server updates its own graphics
+		paint_card(toRemove->card1_x, toRemove->card1_y, 255, 255, 255); // Paints the card' white.
+		paint_card(toRemove->card2_x, toRemove->card2_y, 255, 255, 255); // Paints the card' white.
+		
 		memset(str, 0, sizeof(str));
 		code = 14;
 		sprintf(str, "%d-%d-%d-%d-%d\n", code, toRemove->card1_x, toRemove->card1_y, toRemove->card2_x, toRemove->card2_y);
@@ -113,6 +120,12 @@ void removePlayer(player *toRemove)
 	}
 
 	if(toRemove->count_5seconds == 1) {
+		// Sets the card's status to down (d).
+		set_card_traits(toRemove->card1_x, toRemove->card1_y, 'd', toRemove->rgb_R, toRemove->rgb_G, toRemove->rgb_B);
+
+		// Server updates its own graphics
+		paint_card(toRemove->card1_x, toRemove->card1_y, 255, 255, 255); // Paints the card' white.
+		
 		// Notifies the oterh players.
 		memset(str, 0, sizeof(str));
 		code = 13;
@@ -362,6 +375,8 @@ void interpret_final_msg(char final_msg[], player *me)
 							me->card2_y = -1;
 						}
 						else { // If all pairs have been found.
+							game = 0; // The game has ended.
+
 							// Gives the player feedback.
 							memset(str, 0, sizeof(str));
 							code = 7;
@@ -380,10 +395,8 @@ void interpret_final_msg(char final_msg[], player *me)
 							me->card2_x = -1;
 							me->card2_y = -1;
 
-							// AQUI!!!! --------------------------------------------
 							found_pairs = 0;
 							terminate = 2;
-							game = 0;
 							// pthread_create(&end_gameID, NULL, end_game_thread, NULL);
 						}
 
@@ -722,7 +735,7 @@ void *endGame_thread(void *arg)
 	now = time(NULL);
 	while(now - aux_10seconds <= 10)
 		now = time(NULL);
-/*
+	/*
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 		exit(-1);
@@ -730,7 +743,8 @@ void *endGame_thread(void *arg)
 	if(TTF_Init() == -1) {
 		printf("TTF_Init: %s\n", TTF_GetError());
 		exit(-1);
-	}*/
+	}
+	*/
 	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board, 0); // GRAPHICS
 	init_board(dim_board);
 
