@@ -2,7 +2,7 @@
 
 int main(int argc, char const *argv[])
 {
-    int n; // Aid variable. 
+    int n; // Aid variable.
 	int dim_board; // Board dimension (in cards).
 	time_t now, aux_endTime;
 	pthread_t listenSocketID, stdinSocketID, endGameID;
@@ -22,7 +22,7 @@ int main(int argc, char const *argv[])
 
 	// START
 	dim_board = argumentControl(argc, argv);
-	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // GRAPHICS
+	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board, 1); // GRAPHICS
 	init_board(dim_board);
 
 	init_lock();
@@ -37,10 +37,10 @@ int main(int argc, char const *argv[])
 			set_terminate();
 			break;
 		}
-		
-		if(get_terminate() == 1) 
+
+		if(get_terminate() == 1)
 			break;
-		
+
 		else if(get_terminate() == 2) {
 			pthread_create(&endGameID, NULL, endGame_thread, NULL);
 			pthread_join(endGameID, NULL);

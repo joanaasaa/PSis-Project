@@ -14,10 +14,10 @@ int card2_x = -1;
 int card2_y = -1;
 int waiting = 0; // Indicates if the player's waiting for feedback on its choice (1), or not (0).
 
-void argumentControl(int argc, char const *argv[]) 
+void argumentControl(int argc, char const *argv[])
 {
     char str[20];
-	
+
 	if(argc < 2) {
     	printf("Second argument has to be the server's IP address!\n");
     	exit(-1);
@@ -43,7 +43,7 @@ void create_socket(const char *server_ip)
 
   	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(SERVER_PORT);
-	
+
 	inet_aton(server_ip, &server_addr.sin_addr); //argv[1] => SERVER_IP
 
 	n = connect(fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -58,7 +58,7 @@ void create_socket(const char *server_ip)
 	return;
 }
 
-void interpret_final_msg(char final_msg[]) 
+void interpret_final_msg(char final_msg[])
 {
 	int code; // Stores server's messages' codes.
 	int print_x1, print_y1, print_x2, print_y2;
@@ -74,7 +74,7 @@ void interpret_final_msg(char final_msg[])
 		printf("Received message with code %d\n\n", code);
 
 		if(game == 0) {
-			
+
 			if(code == 9) {
 				if(sscanf(str, "%*d-%d-%d-%d-%d-%d\n", &dim_board, &game, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
 					if(game == 0) { // Game hasn't started (there weren't enough players).
@@ -101,7 +101,7 @@ void interpret_final_msg(char final_msg[])
 						printf("TTF_Init: %s\n", TTF_GetError());
 						exit(2);
 					}
-					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
+					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board, 1); // Prints a clean board to the screen.
 
 					graphics = 1;
 				}
@@ -116,7 +116,7 @@ void interpret_final_msg(char final_msg[])
 		}
 
 		else if(game == 2) {
-			
+
 			if(code == 12) {
 				game = 1;
 				printf("Start palying!\n\n");
@@ -124,9 +124,9 @@ void interpret_final_msg(char final_msg[])
 			else if(code == 15 || code == 16) {
 
 				if(sscanf(str, "%*d-%c%c-%c-%d-%d-%d-%d-%d\n", &print_str1[0], &print_str1[1], &status, &print_x1, &print_y1, &print_R, &print_G, &print_B) == 8) { //------------------------------------------------
-					
+
 					paint_card(print_x1, print_y1, print_R, print_G, print_B); // Paints the card's backgroud with our color.
-					
+
 					if(status == 'l') { // Locked card.
 
 						write_card(print_x1, print_y1, print_str1, 0, 0, 0); // Paints the letters on the card black.
@@ -143,8 +143,8 @@ void interpret_final_msg(char final_msg[])
 				else {
 					printf("Bad message from server!\n\n");
 				}
-				
-				if(code == 16) 
+
+				if(code == 16)
 					waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
 			}
 			else {
@@ -153,7 +153,7 @@ void interpret_final_msg(char final_msg[])
 		}
 
 		else if(game == 3) {
-			
+
 			if(code == 12) {
 				game = 1;
 				printf("Start palying!\n\n");
@@ -207,7 +207,7 @@ void interpret_final_msg(char final_msg[])
 					write_card(print_x1, print_y1, print_str1, 0, 0, 0); // Paints the letters on the card black.
 					paint_card(print_x2, print_y2 , print_R, print_G, print_B); // Paints the card's backgroud with the player's color.
 					write_card(print_x2, print_y2, print_str1, 0, 0, 0); // Paints the letters on the card black.
-				
+
 					if(code == 3) {
 						printf("Awaiting game results...\n");
 						waiting = -1;
@@ -299,13 +299,14 @@ void interpret_final_msg(char final_msg[])
 						printf("Congratualations, winner!\n\n");
 					else // code == 11
 						printf("Bummer, you lost... Better luck next time!\n\n");
-					
+
 					printf("Your final score: %d\n\n", me.score);
 
-					close_board_windows();
+					// close_board_windows();
 					graphics = 0;
 
 					// Print blank board on screen:
+          /*
 					if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 						printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 						exit(-1);
@@ -314,7 +315,8 @@ void interpret_final_msg(char final_msg[])
 						printf("TTF_Init: %s\n", TTF_GetError());
 						exit(2);
 					}
-					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
+          */
+					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board, 0); // Prints a clean board to the screen.
 					graphics = 1;
 
 					waiting = 0;
@@ -349,9 +351,9 @@ void interpret_final_msg(char final_msg[])
 			else if(code == 15 || code == 16) {
 
 				if(sscanf(str, "%*d-%c%c-%c-%d-%d-%d-%d-%d\n", &print_str1[0], &print_str1[1], &status, &print_x1, &print_y1, &print_R, &print_G, &print_B) == 8) { //------------------------------------------------
-					
+
 					paint_card(print_x1, print_y1, print_R, print_G, print_B); // Paints the card's backgroud with our color.
-					
+
 					if(status == 'l') { // Locked card.
 
 						write_card(print_x1, print_y1, print_str1, 0, 0, 0); // Paints the letters on the card black.
@@ -368,8 +370,8 @@ void interpret_final_msg(char final_msg[])
 				else {
 					printf("Bad message from server!\n\n");
 				}
-				
-				if(code == 16) 
+
+				if(code == 16)
 					waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
 
 			}
@@ -411,7 +413,7 @@ void interpret_final_msg(char final_msg[])
 	return;
 } // End of function.
 
-void *thread_read(void *arg) 
+void *thread_read(void *arg)
 {
 	int n;
 	int code;
@@ -429,7 +431,7 @@ void *thread_read(void *arg)
 
 		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
 		if(n<=0) { // If there was an error reading.
-			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) 
+			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) )
 				continue;
 			else {
 				terminate = 1;
@@ -474,14 +476,14 @@ void *thread_write(void *arg)
 	char str[24];
 	time_t now;
 
-	while(!terminate) {	
+	while(!terminate) {
 
 		if(graphics == 1) { // If the board's graphics have already been initialized.
-			
+
 			while(SDL_PollEvent(&event)) {
-				
+
 				switch(event.type) {
-					
+
 					case(SDL_QUIT): {
 
 						if(waiting == 1 || waiting == -1) // If the player is waiting on feedback from a play or on game results ...
@@ -491,9 +493,9 @@ void *thread_write(void *arg)
 
 							terminate = SDL_TRUE;
 						}
-						
+
 						break;
-					} 
+					}
 
 					case(SDL_MOUSEBUTTONDOWN): {
 
@@ -501,10 +503,10 @@ void *thread_write(void *arg)
 
 						if(waiting != 0) // If a player is blocked after a bad choice or is waiting on any kind of feedback from the server ...
 							printf("Wait!\n"); // ... it can't choose a card.
-						else { 
+						else {
 							if(game == 2)
 								printf("Can't select any cards yet! Still waiting for a 2nd player to join.\n\n");
-							
+
 							else if(game == 3) {
 								printf("Can't select any cards yet! Waiting for another game to start.\n\n");
 							}
@@ -522,7 +524,7 @@ void *thread_write(void *arg)
 
 									waiting = 1; // Player is waiting for server's feedback on choice.
 								}
-								else { // If this was the player's 2nd choice.
+								else if(card2_x == -1) { // If this was the player's 2nd choice.
 
 									card2_x = card_x_aux;
 									card2_y = card_y_aux;
@@ -535,9 +537,12 @@ void *thread_write(void *arg)
 
 									waiting = 1; // Player is waiting for server's feedback on choice.
 								}
+
+                else // If the player has already made both his choices.
+                  printf("Wait!\n");
 							}
-						} 
-						
+						}
+
 						break;
 					} // End of case(SDL_MOUSEBUTTONDOWN):
 				} // End of switch.

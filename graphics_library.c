@@ -65,8 +65,8 @@ void get_board_card(int mouse_x, int mouse_y, int *board_x, int *board_y) {
 }
 
 
-void create_board_window(int width, int height, int dim) {
-	
+void create_board_window(int width, int height, int dim, int start) {
+
 	screen_width = width;
 	screen_height = height;
 	n_ronw_cols = dim;
@@ -74,7 +74,7 @@ void create_board_window(int width, int height, int dim) {
 	col_width = width /n_ronw_cols;
 	screen_width = n_ronw_cols * col_width +1;
 	screen_height = n_ronw_cols * row_height +1;
-	
+
 
 	/*
 	n_ronw_cols = dim;
@@ -84,9 +84,11 @@ void create_board_window(int width, int height, int dim) {
 	screen_height = height +1;
 	*/
 
-	if(SDL_CreateWindowAndRenderer(screen_width, screen_height, 0, &window, &renderer) != 0) {
-		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-		exit(-1);
+	if(start == 1) {
+		if(SDL_CreateWindowAndRenderer(screen_width, screen_height, 0, &window, &renderer) != 0) {
+			printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+			exit(-1);
+		}
 	}
 
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE); //  Branco.
@@ -96,11 +98,11 @@ void create_board_window(int width, int height, int dim) {
 	for (int i = 0; i <n_ronw_cols+1; i++) { // Desenha as linhas horizontais.
 		SDL_RenderDrawLine(renderer, 0, i*row_height, screen_width, i*row_height);
 	}
-	
+
 	for (int i = 0; i <n_ronw_cols+1; i++) { // Desenha as linhas verticais.
 		SDL_RenderDrawLine(renderer, i*col_width, 0, i*col_width, screen_height);
 	}
-
+	
 	SDL_RenderPresent(renderer); // Actualiza o ecrã com todo o rendering realizado resde a última call.
 }
 
