@@ -69,7 +69,6 @@ void interpret_final_msg(char final_msg[])
 	int code; // Stores server's messages' codes.
 	int print_x1, print_y1, print_x2, print_y2;
 	int print_R, print_G, print_B;
-	int final_score;
 	char str[100];
 	char print_str1[3], print_str2[3];
 	char status;
@@ -96,6 +95,8 @@ void interpret_final_msg(char final_msg[])
 						waiting = 2;
 						printf("Game is frozen. Waiting for more players to join...\n\n"); // Needs code 12 to continue playing.
 					}
+
+					me.score = 0;
 
 					// Print initial board on screen:
 					if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -162,6 +163,11 @@ void interpret_final_msg(char final_msg[])
 			if(code == 12) {
 				game = 1;
 				printf("Start palying!\n\n");
+			}
+
+			else if(code == 17) {
+				game = 2;
+				printf("You're the only player in-game. Waiting for a second player to join...\n\n");
 			}
 
 			else {
@@ -301,38 +307,41 @@ void interpret_final_msg(char final_msg[])
 
 			else if(code == 10 || code == 11) { // Received message saying this player was the winner or he lost.
 				if(waiting == -1) {
-					if(sscanf(str, "%*d-%d\n", &final_score) == 1) {
-						if(code == 10)
-							printf("Congratualations, winner!\n\n");
-						else // code == 11
-							printf("Bummer, you lost... Better luck next time!\n\n");
-						
-						printf("Your final score: %d\n", final_score);
+					if(code == 10)
+						printf("Congratualations, winner!\n\n");
+					else // code == 11
+						printf("Bummer, you lost... Better luck next time!\n\n");
+					
+					printf("Your final score: %d\n\n", me.score);
 
-						close_board_windows();
-						graphics = 0;
+					printf("AQUI!\n\n");
 
-						waiting = 0;
-						count_2seconds = 0;
-						count_5seconds = 0;
+					close_board_windows();
+					printf("AQUI!2\n\n");
+					graphics = 0;
+					printf("AQUI!3\n\n");
 
-						// Print blank board on screen:
-						if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-							printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-							exit(-1);
-						}
-						if(TTF_Init() == -1) {
-							printf("TTF_Init: %s\n", TTF_GetError());
-							exit(2);
-						}
-						create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
-						graphics = 1;
-
-						game = 3;
+					// Print blank board on screen:
+					if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+						printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+						exit(-1);
 					}
-					else {
-						printf("Bad message from server!\n\n");
+					printf("AQUI!4\n\n");
+					if(TTF_Init() == -1) {
+						printf("TTF_Init: %s\n", TTF_GetError());
+						exit(2);
 					}
+					printf("AQUI!5\n\n");
+					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
+					printf("AQUI!6\n\n");
+					graphics = 1;
+
+					waiting = 0;
+					count_2seconds = 0;
+					count_5seconds = 0;
+					me.score = 0;
+
+					game = 3;
 				}
 				else {
 					printf("Player wasn't waiting for feedback from server!\n\n");

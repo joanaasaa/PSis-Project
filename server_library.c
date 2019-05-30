@@ -92,7 +92,7 @@ void addPlayer(int newfd)
 
 	nr_players++;
 
-	printf("A new player is now connected.\n");
+	printf("A new player is now connected.\n\n");
 
 	pthread_create(&(players_aux->threadID), NULL, player_thread, players_aux);
 }
@@ -188,7 +188,7 @@ void *listenSocket_thread(void *arg)
 		exit(-1);
  	}
 
-  	printf("Socket created and binded!\n");
+  	printf("Socket created and binded!\n\n");
   	listen(fd, 5);
 
 	while(terminate != 1) {	
@@ -308,6 +308,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					if(strcmp(card1, card2) == 0) {
 						printf("Cards match!\n");
 						found_pairs++;
+						me->score++;
 						printf("Nr. of pairs found: %d\n\n", found_pairs);
 
 						// Updates the matched cards' status in the board.
@@ -582,37 +583,26 @@ void *player_thread(void *arg)
 
 void *endGame_thread(void *arg) 
 {
-	printf("aqui0\n");
-	
 	int code;
 	char str[50];
 	player *winner = NULL;
 	time_t aux_10seconds, now;
 
-	printf("aqui1\n");
-
 	aux_10seconds = time(NULL);
-
-	printf("aqui2\n");
 
 	pthread_rwlock_rdlock(&lock_players);
 
 	// Server searches for winner.
 	for(player* aux = players_head; aux != NULL; aux = aux->next) {
-		printf("aqui3\n");
 		if(winner == NULL) {
-			printf("OLA\n");
 			winner = aux;
-			printf("OLASINHO 2\n");
-		}
-			
+		}	
 		else {
-			printf("HELLO\n");
-			if(winner->score < aux->score) 
+			if(winner->score <= aux->score) 
 				winner = aux;
 		}
 	}
-	printf("aqui4\n");
+
 	// Sends message to winner.
 	memset(str, 0, sizeof(str));
 	code = 10;
@@ -620,14 +610,10 @@ void *endGame_thread(void *arg)
 	write(winner->socket, str, strlen(str));
 	printf("Wrote: %s\n", str);
 
-	printf("aqui5\n");
-
 	// Notifies losers. !!!!! VER DISTO !!!!!
 	memset(str, 0, sizeof(str));
 	code = 11;
 	sprintf(str, "%d\n", code);
-
-	printf("aqui6\n");
 
 	for(player* aux = players_head; aux != NULL; aux = aux->next) {
 		aux->score = 0;
@@ -646,8 +632,10 @@ void *endGame_thread(void *arg)
 	clear_board();
 	close_board_windows();
 
+	printf("The game ended! Wait for 10 seconds...\n\n");
+
 	now = time(NULL);
-	while(now - aux_10seconds <= 10)
+	while(now - aux_10seconds >= 10)
 		now = time(NULL);
 	
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -661,12 +649,27 @@ void *endGame_thread(void *arg)
 	create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // GRAPHICS
 	init_board(dim_board);
 
-	memset(str, 0, sizeof(str));
-	code = 12;
-	sprintf(str, "%d\n", code);
-	write2all(NULL, str);
-
 	terminate = 0;
+
+	printf("A new game has started!\n\n");
+
+	if(nr_players >= 2) {
+		game = 1;
+		printf("All set! There's more than 1 player connected.\n\n");
+		memset(str, 0, sizeof(str));
+		code = 12;
+		sprintf(str, "%d\n", code);
+		write2all(NULL, str);
+	}
+	else { 
+		game = 0;
+		printf("Waiting for a 2nd player to join...\n\n");
+		memset(str, 0, sizeof(str));
+		code = 17;
+		sprintf(str, "%d\n", code);
+		write2all(NULL, str);
+	}
+
 	
 	pthread_exit(NULL);
 }
