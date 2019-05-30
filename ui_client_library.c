@@ -13,9 +13,6 @@ int card1_y = -1;
 int card2_x = -1;
 int card2_y = -1;
 int waiting = 0; // Indicates if the player's waiting for feedback on its choice (1), or not (0).
-int count_2seconds = 0; // Indicates if the program is counting 2 seconds, during which the player is blocked from playing, (1), or not (0). Counts 2 seconds after a bad play.
-int count_5seconds = 0; // Indicates if the program is counting 5 seconds (1), or not (0). It starts counting after the player's first choice
-time_t aux_2seconds, aux_5seconds;
 
 void argumentControl(int argc, char const *argv[]) 
 {
@@ -242,9 +239,6 @@ void interpret_final_msg(char final_msg[])
 						card1[2] = '\0';
 						paint_card(card1_x, card1_y, me.rgb_R, me.rgb_G, me.rgb_B); // Paints the card's backgroud with our color.
 						write_card(card1_x, card1_y, card1, 200, 200, 200); // Paints the letters on the card grey.
-
-						aux_5seconds = time(NULL); 
-						count_5seconds = 1; // Starts counting the time until our next play
 					}
 					else {
 						printf("Bad message from server!\n\n");
@@ -289,9 +283,6 @@ void interpret_final_msg(char final_msg[])
 						write_card(card1_x, card1_y, card1, 255, 0, 0); // Paints the letters on the card red.
 						paint_card(card2_x, card2_y, me.rgb_R, me.rgb_G, me.rgb_B); // Paints the card's backgroud with our color.
 						write_card(card2_x, card2_y, card2, 255, 0, 0); // Paints the letters on the card red.
-
-						aux_2seconds = time(NULL); 
-						count_2seconds = 1; // Starts counting the time until we're unblocked from playing.
 					}
 					else {
 						printf("Bad message from server!\n\n");
@@ -327,8 +318,6 @@ void interpret_final_msg(char final_msg[])
 					graphics = 1;
 
 					waiting = 0;
-					count_2seconds = 0;
-					count_5seconds = 0;
 					me.score = 0;
 
 					game = 3;
@@ -390,6 +379,25 @@ void interpret_final_msg(char final_msg[])
 				printf("You're the only player in-game. Waiting for a second player to join...\n\n");
 			}
 
+			else if(code == 18) {
+				// Player updates its graphics.
+				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
+
+				card1_x = -1;
+				card1_y = -1;
+			}
+
+			else if(code == 19) {
+				// Player updates its graphics.
+				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
+				paint_card(card2_x, card2_y, 255, 255, 255); // Paints the card' white.
+
+				card1_x = -1;
+				card1_y = -1;
+				card2_x = -1;
+				card2_y = -1;
+			}
+
 			else {
 				printf("Impossible code number!\n\n");
 			}
@@ -416,45 +424,6 @@ void *thread_read(void *arg)
 	memset(res, 0, sizeof(res));
 
 	while(!terminate) {
-
-		if(count_2seconds == 1) { // If the program is counting the time until player is blocked from playing.
-			now = time(NULL);
-			if(now - aux_2seconds >= 2) { 
-				count_2seconds = 0; // No need to keep counting.
-
-				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
-				paint_card(card2_x, card2_y, 255, 255, 255); // Paints the card' white.
-
-				card1_x = -1; // The first play is undone.
-				card1_y = -1; // The first play is undone.
-				card2_x = -1; // The first play is undone.
-				card2_y = -1; // The first play is undone.
-				
-				memset(str, 0, sizeof(str));
-				code = -4;
-				sprintf(str, "%d\n", code);
-				write(fd, str, strlen(str));
-				printf("Sent: %s\n", str);
-			}
-		}
-
-		if(count_5seconds == 1) { // If the program is counting the time until player makes its 2nd choice.
-			now = time(NULL);
-			if(now - aux_5seconds >= 5) { 
-				count_5seconds = 0; // No need to keep counting.
-
-				paint_card(card1_x, card1_y, 255, 255, 255); // Paints the card' white.
-
-				card1_x = -1; // The first play is undone.
-				card1_y = -1; // The first play is undone.
-				
-				memset(str, 0, sizeof(str));
-				code = -3;
-				sprintf(str, "%d\n", code);
-				write(fd, str, strlen(str));
-				printf("Sent: %s\n", str);
-			}
-		}
 
 		memset(str, 0, sizeof(str));
 
@@ -520,22 +489,6 @@ void *thread_write(void *arg)
 						else {
 							printf("Quitting...\n");
 
-							if(count_2seconds == 1) {
-								memset(str, 0, sizeof(str));
-								code = -4;
-								sprintf(str, "%d\n", code);
-								write(fd, str, strlen(str));
-								printf("Sent: %s\n", str);
-							}
-							
-							if(count_5seconds == 1) {
-								memset(str, 0, sizeof(str));
-								code = -3; // Send message to the server as if the 5 seconds have passed.
-								sprintf(str, "%d\n", code);
-								write(fd, str, strlen(str));
-								printf("Sent: %s\n", str);
-							}
-
 							terminate = SDL_TRUE;
 						}
 						
@@ -546,7 +499,7 @@ void *thread_write(void *arg)
 
 						get_board_card(event.button.x, event.button.y, &card_x_aux, &card_y_aux);
 
-						if(count_2seconds == 1 || waiting != 0) // If a player is blocked after a bad choice or is waiting on any kind of feedback from the server ...
+						if(waiting != 0) // If a player is blocked after a bad choice or is waiting on any kind of feedback from the server ...
 							printf("Wait!\n"); // ... it can't choose a card.
 						else { 
 							if(game == 2)
@@ -571,8 +524,6 @@ void *thread_write(void *arg)
 								}
 								else { // If this was the player's 2nd choice.
 
-									count_5seconds = 0;
-									
 									card2_x = card_x_aux;
 									card2_y = card_y_aux;
 

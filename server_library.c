@@ -74,6 +74,8 @@ void addPlayer(int newfd)
 	players_aux->rgb_G = rand() % 255 + 1;
 	players_aux->rgb_B = rand() % 127 + 128;
 	players_aux->score = 0; // Number of pairs.
+	players_aux->count_2seconds = 0;
+	players_aux->count_5seconds = 0;
 
 	pthread_rwlock_rdlock(&lock_players);
 	
@@ -97,9 +99,26 @@ void addPlayer(int newfd)
 
 void removePlayer(player *toRemove) 
 {
+	int code;
+	char str[50];
 	player *players_aux, *players_prev;
 			
 	close(toRemove->socket); // Closing player's socket.
+
+	if(toRemove->count_2seconds == 1) {
+		memset(str, 0, sizeof(str));
+		code = 14;
+		sprintf(str, "%d-%d-%d-%d-%d\n", code, toRemove->card1_x, toRemove->card1_y, toRemove->card2_x, toRemove->card2_y);
+		write2all(toRemove, str);
+	}
+	
+	if(toRemove->count_5seconds == 1) {
+		// Notifies the oterh players.
+		memset(str, 0, sizeof(str));
+		code = 13;
+		sprintf(str, "%d-%d-%d\n", code, toRemove->card1_x, toRemove->card1_y);
+		write2all(toRemove, str);
+	}
 	
 	pthread_rwlock_wrlock(&lock_players); 
 
@@ -246,7 +265,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					printf("x: %d	y: %d\n", me->card1_x, me->card1_y);
 					printf("Card: %s	Status: %c\n\n", get_card_str(me->card1_x, me->card1_y), get_card_status(me->card1_x, me->card1_y));
 
-					if(get_card_status(me->card1_x, me->card1_y) != 'd') {
+					if(get_card_status(me->card1_x, me->card1_y) != 'd' || me->count_2seconds == 1) {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
@@ -278,6 +297,9 @@ void interpret_final_msg(char final_msg[], player *me)
 					code = 1;
 					sprintf(str, "%d-%c%c-%d-%d-%d-%d-%d\n", code, card1[0], card1[1], me->card1_x, me->card1_y, me->rgb_R, me->rgb_G, me->rgb_B);
 					write2all(me, str);
+
+					me->aux_5seconds = time(NULL);
+					me->count_5seconds = 1;
 				}
 				else {
 					printf("Bad message from server!\n\n");
@@ -290,7 +312,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					printf("x: %d	y: %d\n", me->card2_x, me->card2_y);
 					printf("Card: %s	Status: %c\n\n", get_card_str(me->card2_x, me->card2_y), get_card_status(me->card2_x, me->card2_y));
 					
-					if( (get_card_status(me->card2_x, me->card2_y) != 'd') || ((me->card1_x == me->card2_x) && (me->card1_y == me->card2_y)) ) {
+					if( (get_card_status(me->card2_x, me->card2_y) != 'd') /*|| ((me->card1_x == me->card2_x) && (me->card1_y == me->card2_y))*/ ) {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
@@ -298,6 +320,8 @@ void interpret_final_msg(char final_msg[], player *me)
 						printf("Wrote: %s\n", str);
 						return;
 					}
+
+					me->count_5seconds = 0;
 					
 					// Gets card's string.
 					strcpy(card1, get_card_str(me->card1_x, me->card1_y));
@@ -388,6 +412,9 @@ void interpret_final_msg(char final_msg[], player *me)
 						code = 4;
 						sprintf(str, "%d-%c%c-%c%c-%d-%d-%d-%d-%d-%d-%d\n", code, card1[0], card1[1], card2[0], card2[1], me->card1_x, me->card1_y, me->card2_x, me->card2_y, me->rgb_R, me->rgb_G, me->rgb_B);
 						write2all(me, str);
+						
+						me->aux_2seconds = time(NULL);
+						me->count_2seconds = 1;
 					}	
 				}
 				else {
@@ -395,42 +422,42 @@ void interpret_final_msg(char final_msg[], player *me)
 				}
 			}
 
-			else if(code == 3) {
-				// Sets the card's status to down (d).
-				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
+			// else if(code == 3) {
+			// 	// Sets the card's status to down (d).
+			// 	set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
 
-				// Server updates its own graphics
-				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
+			// 	// Server updates its own graphics
+			// 	paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
 				
-				// Notifies the oterh players.
-				memset(str, 0, sizeof(str));
-				code = 13;
-				sprintf(str, "%d-%d-%d\n", code, me->card1_x, me->card1_y);
-				write2all(me, str);
+			// 	// Notifies the oterh players.
+			// 	memset(str, 0, sizeof(str));
+			// 	code = 13;
+			// 	sprintf(str, "%d-%d-%d\n", code, me->card1_x, me->card1_y);
+			// 	write2all(me, str);
 
-				me->card1_x = -1;
-				me->card1_y = -1;
-			}
+			// 	me->card1_x = -1;
+			// 	me->card1_y = -1;
+			// }
 
-			else if(code == 4) {	
-				// Sets the card's status to down (d).
-				set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
+			// else if(code == 4) {	
+			// 	// Sets the card's status to down (d).
+			// 	set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
 
-				// Server updates its own graphics
-				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
-				paint_card(me->card2_x, me->card2_y, 255, 255, 255); // Paints the card' white.
+			// 	// Server updates its own graphics
+			// 	paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
+			// 	paint_card(me->card2_x, me->card2_y, 255, 255, 255); // Paints the card' white.
 				
-				// Notifies the oterh players.
-				memset(str, 0, sizeof(str));
-				code = 14;
-				sprintf(str, "%d-%d-%d-%d-%d\n", code, me->card1_x, me->card1_y, me->card2_x, me->card2_y);
-				write2all(me, str);
+			// 	// Notifies the oterh players.
+			// 	memset(str, 0, sizeof(str));
+			// 	code = 14;
+			// 	sprintf(str, "%d-%d-%d-%d-%d\n", code, me->card1_x, me->card1_y, me->card2_x, me->card2_y);
+			// 	write2all(me, str);
 
-				me->card1_x = -1;
-				me->card1_y = -1;
-				me->card2_x = -1;
-				me->card2_y = -1;
-			}
+			// 	me->card1_x = -1;
+			// 	me->card1_y = -1;
+			// 	me->card2_x = -1;
+			// 	me->card2_y = -1;
+			// }
 
 			else {
 				printf("Impossible code number!\n\n");
@@ -455,6 +482,7 @@ void *player_thread(void *arg)
 	char *res_aux, buffer[200], final_msg[100], res[100];
 	char str[100];
 	char *str2 = NULL;
+	time_t now;
 	player *me = (player*) arg;
 
 	memset(card, 0, sizeof(card));
@@ -510,8 +538,67 @@ void *player_thread(void *arg)
 	}
 
 	while(terminate != 1) { // Server waits for player's decesion.
+		
+		if(me->count_2seconds == 1) {
+			now = time(NULL);
+			if(now - me->aux_2seconds >= 2) {
+				me->count_2seconds = 0; // No need to keep counting.
+
+				// Sets the card's status to down (d).
+				set_pair_traits(me->card1_x, me->card1_y, me->card2_x, me->card2_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
+
+				// Server updates its own graphics
+				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
+				paint_card(me->card2_x, me->card2_y, 255, 255, 255); // Paints the card' white.
+
+				// Notifies the player the 2 seconds have passed.
+				memset(str, 0, sizeof(str));
+				code = 19;
+				sprintf(str, "%d\n", code);
+				write(me->socket, str, strlen(str));
+				
+				// Notifies the oterh players.
+				memset(str, 0, sizeof(str));
+				code = 14;
+				sprintf(str, "%d-%d-%d-%d-%d\n", code, me->card1_x, me->card1_y, me->card2_x, me->card2_y);
+				write2all(me, str);
+
+				me->card1_x = -1;
+				me->card1_y = -1;
+				me->card2_x = -1;
+				me->card2_y = -1;
+			}
+		}
+
+		if(me->count_5seconds == 1) {
+			now = time(NULL);
+			if(now - me->aux_5seconds >= 5) {
+				me->count_5seconds = 0; // No need to keep counting.
+
+				// Sets the card's status to down (d).
+				set_card_traits(me->card1_x, me->card1_y, 'd', me->rgb_R, me->rgb_G, me->rgb_B);
+
+				// Server updates its own graphics
+				paint_card(me->card1_x, me->card1_y, 255, 255, 255); // Paints the card' white.
+
+				// Notifies the player the 2 seconds have passed.
+				memset(str, 0, sizeof(str));
+				code = 18;
+				sprintf(str, "%d\n", code);
+				write(me->socket, str, strlen(str));
+				
+				// Notifies the oterh players.
+				memset(str, 0, sizeof(str));
+				code = 13;
+				sprintf(str, "%d-%d-%d\n", code, me->card1_x, me->card1_y);
+				write2all(me, str);
+
+				me->card1_x = -1;
+				me->card1_y = -1;
+			}
+		}
+		
 		memset(str, 0, sizeof(str));
-	
 		n = read(me->socket, str, sizeof(str));
 		if(n <= 0) { // If the player disconnected (purposefully or otherwise) or there was no data to be read.
 			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) ) { //  If there was an error because there wasn't data to be read ...
@@ -633,7 +720,7 @@ void *endGame_thread(void *arg)
 	printf("The game ended! Wait for 10 seconds...\n\n");
 
 	now = time(NULL);
-	while(now - aux_10seconds >= 10)
+	while(now - aux_10seconds <= 10)
 		now = time(NULL);
 	
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {

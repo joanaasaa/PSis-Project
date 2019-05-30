@@ -13,6 +13,10 @@ typedef struct player {
     int card1_y;
     int card2_x;
     int card2_y;
+    int count_2seconds;
+    int count_5seconds;
+    time_t aux_2seconds;
+    time_t aux_5seconds;
     struct player *next;
 } player;
 
