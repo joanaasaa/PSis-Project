@@ -1,7 +1,4 @@
-#include "libraries.h"
-#include "client_library.h"
-//#include "board_library.h"
-#include "graphics_library.h"
+#include "ui_client_library.h"
 
 int game = 0; // Indicates the game's state.
 int graphics = 0; // Indicates if the board's graphics have already been initialized (1), or not (0).
@@ -181,11 +178,11 @@ void interpret_final_msg(char final_msg[])
 				if(waiting == 1) {
 					waiting = 0;
 					// Erase previous card choice:
-					if(card1_x == -1) { // if it was the second choice.
+					if(card2_x != -1) { // If the choice was the 2nd in a play.
 						card2_x = -1;
 						card2_y = -1;
 					}
-					else { // if it was the first choice.
+					else {
 						card1_x = -1;
 						card1_y = -1;
 					}
@@ -314,26 +311,19 @@ void interpret_final_msg(char final_msg[])
 					
 					printf("Your final score: %d\n\n", me.score);
 
-					printf("AQUI!\n\n");
-
 					close_board_windows();
-					printf("AQUI!2\n\n");
 					graphics = 0;
-					printf("AQUI!3\n\n");
 
 					// Print blank board on screen:
 					if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 						printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 						exit(-1);
 					}
-					printf("AQUI!4\n\n");
 					if(TTF_Init() == -1) {
 						printf("TTF_Init: %s\n", TTF_GetError());
 						exit(2);
 					}
-					printf("AQUI!5\n\n");
 					create_board_window(WINDOW_SIZE, WINDOW_SIZE, dim_board); // Prints a clean board to the screen.
-					printf("AQUI!6\n\n");
 					graphics = 1;
 
 					waiting = 0;

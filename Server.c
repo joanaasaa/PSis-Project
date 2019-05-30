@@ -1,7 +1,4 @@
-#include "libraries.h"
 #include "server_library.h"
-#include "board_library.h"
-#include "graphics_library.h"
 
 int main(int argc, char const *argv[])
 {
@@ -29,7 +26,6 @@ int main(int argc, char const *argv[])
 	init_board(dim_board);
 
 	init_lock();
-	init_mutex();
 
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Prepares server to listen for new players.
 	pthread_create(&stdinSocketID, NULL, stdinSocket_thread, NULL); // Prepares server to wait for commands from keyboard.
@@ -57,7 +53,6 @@ int main(int argc, char const *argv[])
 	close_board_windows(); // Ends graphics for server.
 
 	destroy_lock();
-	destroy_mutex();
 
     return 0;
 }

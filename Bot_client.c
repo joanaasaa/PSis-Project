@@ -1,10 +1,12 @@
-#include "ui_client_library.h"
+#include "libraries.h"
+#include "bot_client_library.h"
+#include "graphics_library.h"
+#include "board_library.h"
 
 int main(int argc, char const *argv[])
 {
 	int n;
 	char str[10];
-	// struct sockaddr_in server_addr;
 	pthread_t threadID_read, threadID_write;
 
 	argumentControl(argc, argv);
@@ -17,9 +19,7 @@ int main(int argc, char const *argv[])
 	pthread_join(threadID_read, NULL);
 	pthread_join(threadID_write, NULL);
 
-	close_board_windows(); // GRAPHICS
-
-	// close(fd);
+	close_board_windows();
 
     return 0;
 }

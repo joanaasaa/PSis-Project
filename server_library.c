@@ -1,6 +1,4 @@
 #include "server_library.h"
-#include "board_library.h"
-#include "graphics_library.h"
 
 int game = 0; // Registers if the game has started (1), or not (0).
 int dim_board;
@@ -123,7 +121,7 @@ void removePlayer(player *toRemove)
 
 	nr_players--;
 
-	printf("There are now %d players in-game.\n", nr_players);
+	printf("There are now %d players in-game.\n\n", nr_players);
 
 	return;
 }
@@ -292,7 +290,7 @@ void interpret_final_msg(char final_msg[], player *me)
 					printf("x: %d	y: %d\n", me->card2_x, me->card2_y);
 					printf("Card: %s	Status: %c\n\n", get_card_str(me->card2_x, me->card2_y), get_card_status(me->card2_x, me->card2_y));
 					
-					if(get_card_status(me->card2_x, me->card2_y) != 'd') {
+					if( (get_card_status(me->card2_x, me->card2_y) != 'd') || ((me->card1_x == me->card2_x) && (me->card1_y == me->card2_y)) ) {
 						memset(str, 0, sizeof(str));
 						code = 0;
 						sprintf(str, "%d\n", code);
@@ -359,7 +357,7 @@ void interpret_final_msg(char final_msg[], player *me)
 							me->card2_y = -1;
 
 							// AQUI!!!! --------------------------------------------
-
+							found_pairs = 0;
 							terminate = 2;
 							game = 0;
 							// pthread_create(&end_gameID, NULL, end_game_thread, NULL);

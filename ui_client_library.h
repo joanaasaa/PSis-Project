@@ -1,4 +1,5 @@
 #include "libraries.h"
+#include "graphics_library.h"
 
 typedef struct player_self {
     int rgb_R;
@@ -15,8 +16,4 @@ void interpret_final_msg(char final_msg[]);
 
 void *thread_read(void *arg);
 
-void check_time();
-
 void *thread_write(void *arg);
-
-int client_linear_conv(int i, int j);

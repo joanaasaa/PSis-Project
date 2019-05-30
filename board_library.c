@@ -69,6 +69,7 @@ char get_card_status(int i, int j) {
 void clear_board(){
 	free(board);
 	board = NULL;
+	destroy_mutex();
 }
 
 void init_board(int dim) {
@@ -139,65 +140,7 @@ void init_board(int dim) {
 		}
 	}
 
-	
-}
-
-play_response  board_play(int x, int y) { // Recebe o índice da carta e verifica a jogada.
-	play_response resp;
-	resp.code = 10; // Para ser diferente dos valores de 0 a 3 e -2 (ver struct play_response).
-
-	if(strcmp(get_card_str(x, y), "")==0) { // Se a carta já está virada para cima.
-		printf("FILLED\n");
-    	resp.code = 0; // Impossível escolher essa carta.
-	} 
-  	else {
-    	if(play1[0]== -1) { // Se foi a primera escolha de carta na jogada.
-        	printf("FIRST\n");
-        	resp.code = 1;
-
-			play1[0]=x;
-			play1[1]=y;
-			resp.play1[0]= play1[0];
-			resp.play1[1]= play1[1];
-			strcpy(resp.str_play1, get_card_str(x, y));
-      	}
-		else { // Se não foi a primera escolha de carta na jogada.
-			char *first_str = get_card_str(play1[0], play1[1]);
-			char *secnd_str = get_card_str(x, y);
-
-        	if( (play1[0]==x) && (play1[1]==y) ) { // Se foi escolhida a mesma carta.
-				printf("FILLED\n");
-				resp.code = 0; // Impossível escolher essa carta.
-        	} 
-			else { // Se foi escolhida uma carta válida.
-          		resp.play1[0]= play1[0]; 
-          		resp.play1[1]= play1[1];
-          		strcpy(resp.str_play1, first_str);
-          		resp.play2[0]= x;
-          		resp.play2[1]= y;
-          		strcpy(resp.str_play2, secnd_str);
-
-          		if(strcmp(first_str, secnd_str) == 0) { // Se as cartas escolhidas forem iguais.
-            		printf("CORRECT!!!\n");
-
-            		strcpy(first_str, "");
-            		strcpy(secnd_str, "");
-
-            		n_corrects += 2; // Actualiza o número de cartas viradas para cima definitivamente.
-
-            		if(n_corrects == dim_board * dim_board) resp.code = 3; // Se já todas foram viradas para cima, o jogo termina.
-            		else resp.code =2; // Acertou nas cartas mas o jogo não terminou.
-          		}
-				else {
-            		printf("INCORRECT\n");
-            		resp.code = 4; // Não acertaste nas cartas.
-          		}
-          		play1[0]= -1; // Faz reset do play1[0] para -1 para sabermos que a próxima jogada será uma 1ª escolha de carta.
-        	}
-      	}
-    }
-
-	return resp; // Retorna a estrura com a info da jogada completa (1ª e 2ª escolhas).
+	init_mutex();	
 }
 
 char *get_str2send(int i, int j) 

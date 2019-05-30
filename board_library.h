@@ -9,12 +9,6 @@ typedef struct card {
     int rgb_B;
 } card; // Para guardar a informação de cada carta.
 
-typedef struct play_response {
-	int code; // Código que reprensenta a fase da jogada e do jogo.
-	int play1[2], play2[2]; // Índice da carta escolhida da 1ª e 2ª vez.
-	char str_play1[3], str_play2[3]; // String correspondente às cartas escolhidas da 1ª e 2ª vez.
-} play_response;
-
 // ------- FUNCTIONS -------
 void init_mutex();
 
@@ -31,8 +25,6 @@ char get_card_status(int i, int j);
 void clear_board();
 
 void init_board(int dim); // Para atribuir as strings aos lugares do tabuleiro.
-
-play_response board_play (int x, int y);
 
 char *get_str2send(int i, int j); // Devolve, segundo coordenadas dadas, a string de um dado lugar do tabuleiro.
 

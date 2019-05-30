@@ -1,4 +1,6 @@
 #include "libraries.h"
+#include "board_library.h"
+#include "graphics_library.h"
 
 typedef struct player {
     pthread_t threadID;
