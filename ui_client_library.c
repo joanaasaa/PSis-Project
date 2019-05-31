@@ -143,12 +143,14 @@ void interpret_final_msg(char final_msg[])
 						write_card(print_x1, print_y1, print_str1, 255, 0, 0); // Paints the letters on the card red.
 					}
 				}
+				else if(code == 16) {
+					waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
+				}
 				else {
 					printf("Bad message from server!\n\n");
 				}
 
-				if(code == 16)
-					waiting = 0; // If this is the last card received, this player is no longer  waiting for another board card.
+				
 			}
 			else {
 				printf("Impossible code number!\n\n");
