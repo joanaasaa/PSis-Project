@@ -211,6 +211,10 @@ void interpret_final_msg(char final_msg[])
 				card2_y = -1;
 			}
 
+			else if(code == 1 || code == 2 || code == 4 || code == 5 || code == 8 || code == 13 || code == 14 || code == 15 || code == 16) {
+				printf("Unnessary code for bot client.\n");
+			}
+
 			else {
 				printf("Impossible code number!\n\n");
 			}
@@ -289,9 +293,9 @@ void *thread_write(void *arg)
 
 	while(!terminate) {
 
-		if(waiting != 0) // If player is waiting for something.
-			printf("Wait!\n\n");
-		else {
+		//if(waiting != 0) // If player is waiting for something.
+			//printf("Wait!\n\n");
+		
 
 			now = time(NULL);
 
@@ -338,7 +342,7 @@ void *thread_write(void *arg)
 					printf("Wait!\n\n");
 
 			}
-		}
+		
 
 	}
 
