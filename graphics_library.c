@@ -60,8 +60,6 @@ void clear_card(int  board_x, int board_y){
 void get_board_card(int mouse_x, int mouse_y, int *board_x, int *board_y) {
 	*board_x = mouse_x / col_width;
 	*board_y = mouse_y / row_height;
-
-	// printf("board_x: %d=%d/%d\nboard_y: %d=%d/%d\n", *board_x, mouse_x, col_width, *board_y, mouse_y, row_height);
 }
 
 
@@ -74,15 +72,6 @@ void create_board_window(int width, int height, int dim, int start) {
 	col_width = width /n_ronw_cols;
 	screen_width = n_ronw_cols * col_width +1;
 	screen_height = n_ronw_cols * row_height +1;
-
-
-	/*
-	n_ronw_cols = dim;
-	row_height = height /n_ronw_cols;
-	col_width = width /n_ronw_cols;
-	screen_width = width +1;
-	screen_height = height +1;
-	*/
 
 	if(start == 1) {
 		if(SDL_CreateWindowAndRenderer(screen_width, screen_height, 0, &window, &renderer) != 0) {

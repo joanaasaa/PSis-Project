@@ -5,7 +5,6 @@ int main(int argc, char const *argv[])
     int n; // Aid variable.
 	int dim_board; // Board dimension (in cards).
 	pthread_t listenSocketID, stdinSocketID, endGameID;
-	SDL_Event event;
 
 	dim_board = argumentControl(argc, argv);
 
@@ -30,7 +29,7 @@ int main(int argc, char const *argv[])
 	pthread_create(&listenSocketID, NULL, listenSocket_thread, NULL); // Server can listen for new players.
 	pthread_create(&stdinSocketID, NULL, stdinSocket_thread, NULL); // Server waits for commands from keyboard.
 
-	// Server application can be terminated either by the "exit" command from stdin or when final instant is reached.
+	// Server application can be terminated either by the "exit" command from stdin or if terminate = 1.
 	while(1) {
 		if(get_terminate() == 1)
 			break;

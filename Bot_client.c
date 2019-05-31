@@ -1,7 +1,4 @@
-#include "libraries.h"
 #include "bot_client_library.h"
-#include "graphics_library.h"
-#include "board_library.h"
 
 int main(int argc, char const *argv[])
 {

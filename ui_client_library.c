@@ -383,19 +383,18 @@ void interpret_final_msg(char final_msg[])
 				printf("Impossible code number!\n\n");
 			}
 
-		} // End of game = 1.
+		}
 
-	} // End of if(sscanf(str, "%d%*s", &code) == 1).
+	}
 	else
 		printf("Couldn't read message!\n\n");
 
 	return;
-} // End of function.
+}
 
 void *thread_read(void *arg)
 {
 	int n;
-	int code;
 	char str[100];
 	char *res_aux, buffer[200], final_msg[100], res[100];
 
@@ -407,7 +406,7 @@ void *thread_read(void *arg)
 
 		memset(str, 0, sizeof(str));
 
-		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
+		n = read(fd, &str, sizeof(str)); // Receives a string from server.
 		if(n<=0) { // If there was an error reading.
 			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) )
 				continue;
@@ -451,7 +450,7 @@ void *thread_write(void *arg)
 	int code; // Stores server's messages' codes.
 	int card_x_aux = -1;
 	int card_y_aux = -1;
-	char str[24];
+	char str[50];
 
 	while(!terminate) {
 
@@ -500,7 +499,6 @@ void *thread_write(void *arg)
 									write(fd, str, strlen(str));
 									printf("Sent: %s\n", str);
 
-									//waiting = 1; // Player is waiting for server's feedback on choice.
 								}
 								else if(card2_x == -1) { // If this is the 2nd choice, in a play.
 									card2_x = card_x_aux;
@@ -512,7 +510,6 @@ void *thread_write(void *arg)
 									write(fd, str, strlen(str));
 									printf("Sent: %s\n", str);
 
-									//waiting = 1; // Player is waiting for server's feedback on choice.
 								}
 								else // If the player has already made both his choices.
 									printf("Wait!\n\n");
@@ -520,12 +517,12 @@ void *thread_write(void *arg)
 						}
 
 						break;
-					} // End of case(SDL_MOUSEBUTTONDOWN):
-				} // End of switch.
-			} // End of while(SDL_PollEvent(&event))
-		} // End of if(board == 1)
-	} // End of while(!terminate)
+					}
+				}
+			}
+		}
+	}
 
 	if(graphics == 1) close_board_windows();
 	pthread_exit(0);
-} // End of thread.
+}

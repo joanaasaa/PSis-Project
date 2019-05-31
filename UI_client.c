@@ -2,9 +2,6 @@
 
 int main(int argc, char const *argv[])
 {
-	int n;
-	char str[10];
-	// struct sockaddr_in server_addr;
 	pthread_t threadID_read, threadID_write;
 
 	argumentControl(argc, argv);
@@ -18,8 +15,6 @@ int main(int argc, char const *argv[])
 	pthread_join(threadID_write, NULL);
 
 	close_board_windows(); // GRAPHICS
-
-	// close(fd);
 
     return 0;
 }

@@ -1,13 +1,10 @@
 #include "bot_client_library.h"
 
 int game = 0; // Indicates the game's state.
-int graphics = 0; // Indicates if the board's graphics have already been initialized (1), or not (0).
 int terminate = 0; // Indicates if the program terminated (1) or not (0).
 int fd; // Player socket.
 int dim_board = 0;
 bot_player_self me; // Player's info.
-SDL_Event event;
-//char card1[3], card2[3]; // Stores the 1st and 2nd choices of cards of each play.
 int card1_x = -1;
 int card1_y = -1;
 int card2_x = -1;
@@ -62,11 +59,7 @@ void interpret_final_msg(char final_msg[])
 {
 	int game_server;
 	int code; // Stores server's messages' codes.
-	int chosen_x1, chosen_y1, chosen_x2, chosen_y2;
-	//int chosen_x1, chosen_y1, chosen_x2, chosen_y2;
-	//int print_R, print_G, print_B;
 	char str[100];
-	//char print_str1[3], print_str2[3];
 	char status;
 
 	strcpy(str, final_msg);
@@ -161,8 +154,6 @@ void interpret_final_msg(char final_msg[])
 				card1_y = -1;
 				card2_x = -1;
 				card2_y = -1;
-				//memset(card1, 0, sizeof(card1));
-				//memset(card2, 0, sizeof(card2));
 
 				if(code == 7) { // Game ends.
 					printf("Awaiting game results...\n\n");
@@ -212,7 +203,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 1 || code == 2 || code == 4 || code == 5 || code == 8 || code == 13 || code == 14 || code == 15 || code == 16) {
-				printf("Unnessary code for bot client.\n");
+				printf("Unnessary code for bot client.\n\n");
 			}
 
 			else {
@@ -224,7 +215,7 @@ void interpret_final_msg(char final_msg[])
 		printf("Couldn't read message!\n\n");
 
 	return;
-} // End of function.
+}
 
 void *thread_read(void *arg)
 {
@@ -232,7 +223,6 @@ void *thread_read(void *arg)
 	int code;
 	char str[100];
 	char *res_aux, buffer[200], final_msg[100], res[100];
-	time_t now;
 
 	memset(buffer, 0, sizeof(buffer));
 	memset(final_msg, 0, sizeof(final_msg));
@@ -242,7 +232,7 @@ void *thread_read(void *arg)
 
 		memset(str, 0, sizeof(str));
 
-		n = read(fd, &str, sizeof(str)); // Recebe uma string do servidor.
+		n = read(fd, &str, sizeof(str)); // Receives a string from server.
 		if(n<=0) { // If there was an error reading.
 			if( (errno == EAGAIN || errno == EWOULDBLOCK) && (n==-1) )
 				continue;
@@ -291,11 +281,7 @@ void *thread_write(void *arg)
 
 	srand(time(NULL));
 
-	while(!terminate) {
-
-		//if(waiting != 0) // If player is waiting for something.
-			//printf("Wait!\n\n");
-		
+	while(!terminate) {		
 
 			now = time(NULL);
 
@@ -316,7 +302,7 @@ void *thread_write(void *arg)
 				printf("Random coordinate y: %d\n", card_y_aux);
 
 
-				if(card1_x == -1) { // If this is the 1st choice, in a play.
+				if(card1_x == -1) { // If this is the 1st choice in a play.
 					card1_x = card_x_aux;
 					card1_y = card_y_aux;
 
@@ -327,7 +313,7 @@ void *thread_write(void *arg)
 					printf("Sent: %s\n", str);
 
 				}
-				else if(card2_x == -1) { // If this is the 2nd choice, in a play.
+				else if(card2_x == -1) { // If this is the 2nd choice in a play.
 					card2_x = card_x_aux;
 					card2_y = card_y_aux;
 
@@ -342,8 +328,7 @@ void *thread_write(void *arg)
 					printf("Wait!\n\n");
 
 			}
-		
-
+			
 	}
 
 	pthread_exit(0);
