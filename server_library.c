@@ -56,6 +56,8 @@ void addPlayer(int newfd)
 {
 	player *players_aux;
 
+	srand(time(NULL));
+
 	players_aux = (player*) malloc(sizeof(player));
 	if(players_aux == NULL) {
 		perror("malloc");

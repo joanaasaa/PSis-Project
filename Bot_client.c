@@ -15,7 +15,5 @@ int main(int argc, char const *argv[])
 	pthread_join(threadID_read, NULL);
 	pthread_join(threadID_write, NULL);
 
-	close_board_windows();
-
     return 0;
 }

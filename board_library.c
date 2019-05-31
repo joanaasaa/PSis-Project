@@ -77,6 +77,8 @@ void init_board(int dim) {
 	int i, j;
 	char *str_place;
 
+	srand(time(NULL));
+
 	dim_board= dim;
 	n_corrects = 0;
 	play1[0]= -1;
