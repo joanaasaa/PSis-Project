@@ -13,6 +13,8 @@
 #include <errno.h> // For error checking.
 // Threads:
 #include <pthread.h>
+// BOt:
+#include <time.h>
 // Constants:
 #define SERVER_PORT 3000
 #define WINDOW_SIZE 300

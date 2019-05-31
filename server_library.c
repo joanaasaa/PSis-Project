@@ -12,10 +12,6 @@ int get_terminate() {
 	return terminate;
 }
 
-void set_terminate() {
-	terminate = 1;
-}
-
 int argumentControl(int argc, char const *argv[]) {
 
     if(argc != 2) {
@@ -167,7 +163,7 @@ void *stdinSocket_thread(void *arg)
 	int flags = fcntl(fd_stdin, F_GETFL, 0);
 	fcntl(fd_stdin, F_SETFL, flags | O_NONBLOCK);
 
-	while(terminate != 1) {
+	while(1) {
 		memset(str, 0, sizeof(str));
 
 		n = read(fd_stdin, &str, sizeof(str));
@@ -185,8 +181,6 @@ void *stdinSocket_thread(void *arg)
 		}
 
 	}
-
-	pthread_exit(NULL);
 }
 
 void *listenSocket_thread(void *arg)
@@ -733,8 +727,11 @@ void *endGame_thread(void *arg)
 	printf("The game ended! Wait for 10 seconds...\n\n");
 
 	now = time(NULL);
-	while(now - aux_10seconds <= 10)
+	while(now - aux_10seconds <= 10) {
+		if(terminate == 1)
+			pthread_exit(NULL);
 		now = time(NULL);
+	}
 	/*
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );

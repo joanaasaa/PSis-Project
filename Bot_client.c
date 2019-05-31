@@ -5,7 +5,6 @@
 
 int main(int argc, char const *argv[])
 {
-	int n;
 	char str[10];
 	pthread_t threadID_read, threadID_write;
 

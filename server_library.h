@@ -22,8 +22,6 @@ typedef struct player {
 
 int get_terminate();
 
-void set_terminate();
-
 int argumentControl(int argc, char const *argv[]);
 
 void init_lock();

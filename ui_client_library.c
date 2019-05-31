@@ -398,7 +398,6 @@ void *thread_read(void *arg)
 	int code;
 	char str[100];
 	char *res_aux, buffer[200], final_msg[100], res[100];
-	time_t now;
 
 	memset(buffer, 0, sizeof(buffer));
 	memset(final_msg, 0, sizeof(final_msg));
@@ -453,7 +452,6 @@ void *thread_write(void *arg)
 	int card_x_aux = -1;
 	int card_y_aux = -1;
 	char str[24];
-	time_t now;
 
 	while(!terminate) {
 
