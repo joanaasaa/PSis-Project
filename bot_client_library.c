@@ -74,17 +74,17 @@ void interpret_final_msg(char final_msg[])
 				if(sscanf(str, "%*d-%d-%d-%d-%d-%d\n", &dim_board, &game_server, &(me.rgb_R), &(me.rgb_G), &(me.rgb_B)) == 5) {
 					if(game_server == 0) { // Game hasn't started.
 						game = 2; // Only one connected. Waits for 2nd player.
-						//printf("Waiting for a second player...\n\n");
+						printf("Waiting for a second player...\n\n");
 					}
 					else if(game_server == 1) { // The game has already started.
 						game = 1;
 						waiting = 2; // Waits for board update.
-						//printf("Waiting for board updates...\n\n");
+						printf("Waiting for board updates...\n\n");
 					}
 					else if(game_server == 2) { // The game is frozen.
 						game = 2;
 						waiting = 2; // Waits for board update.
-						//printf("Game is frozen. Waiting for more players to join...\n\n"); // Needs code 12 to continue playing.
+						printf("Game is frozen. Waiting for more players to join...\n\n"); // Needs code 12 to continue playing.
 					}
 
 					me.score = 0;
@@ -121,7 +121,7 @@ void interpret_final_msg(char final_msg[])
 
 			else if(code == 17) { // Game has restarted, but there aren't enough players.
 				game = 2; // Player has to wait for code 12 message.
-				//printf("You're the only player in-game. Waiting for a second player to join...\n\n");
+				printf("You're the only player in-game. Waiting for a second player to join...\n\n");
 			}
 
 			else {
@@ -143,7 +143,7 @@ void interpret_final_msg(char final_msg[])
 			}
 
 			else if(code == 3) { // A player made its 2nd choice, the cards match and the game ends.
-				//printf("Awaiting game results...\n");
+				printf("Awaiting game results...\n");
 				waiting = 1;
 			}
 
@@ -156,7 +156,7 @@ void interpret_final_msg(char final_msg[])
 				card2_y = -1;
 
 				if(code == 7) { // Game ends.
-					//printf("Awaiting game results...\n\n");
+					printf("Awaiting game results...\n\n");
 					waiting = 1; // Player waits for results.
 				}
 
@@ -185,7 +185,7 @@ void interpret_final_msg(char final_msg[])
 
 			else if(code == 17) { // Player is the only one in-game.
 				game = 2; // Has to wait for code 12 message.
-				//printf("You're the only player in-game. Waiting for a second player to join...\n\n");
+				printf("You're the only player in-game. Waiting for a second player to join...\n\n");
 			}
 
 			else if(code == 18) { // Player made its 1st choice, but didn't make 2nd. 5 seconds ran out.
@@ -283,44 +283,44 @@ void *thread_write(void *arg)
 
 	while(!terminate) {		
 
-			now = time(NULL);
+		now = time(NULL);
 
-			if((game == 1) && (now - start_time > 1)) { // If game is active and it has been more than 1 second since the last pick (bot plays every second).
+		if((game == 1) && (now - start_time > 1)) { // If game is active and it has been more than 1 second since the last pick (bot plays every second).
 
-				card_x_aux = random() % dim_board;
-				card_y_aux = random() % dim_board;
-				start_time = time(NULL);
+			card_x_aux = random() % dim_board;
+			card_y_aux = random() % dim_board;
+			start_time = time(NULL);
 
-				printf("Random coordinate x: %d\n", card_x_aux);
-				printf("Random coordinate y: %d\n", card_y_aux);
+			printf("Random coordinate x: %d\n", card_x_aux);
+			printf("Random coordinate y: %d\n", card_y_aux);
 
 
-				if(card1_x == -1) { // If this is the 1st choice in a play.
-					card1_x = card_x_aux;
-					card1_y = card_y_aux;
+			if(card1_x == -1) { // If this is the 1st choice in a play.
+				card1_x = card_x_aux;
+				card1_y = card_y_aux;
 
-					memset(str, 0, sizeof(str));
-					code = -1;
-					sprintf(str, "%d-%d-%d\n", code, card1_x, card1_y);
-					write(fd, str, strlen(str));
-					printf("Sent: %s\n", str);
-
-				}
-				else if(card2_x == -1) { // If this is the 2nd choice in a play.
-					card2_x = card_x_aux;
-					card2_y = card_y_aux;
-
-					memset(str, 0, sizeof(str));
-					code = -2;
-					sprintf(str, "%d-%d-%d\n", code, card2_x, card2_y);
-					write(fd, str, strlen(str));
-					printf("Sent: %s\n", str);
-
-				}
-				else // If the player has already made both his choices.
-					printf("Wait!\n\n");
+				memset(str, 0, sizeof(str));
+				code = -1;
+				sprintf(str, "%d-%d-%d\n", code, card1_x, card1_y);
+				write(fd, str, strlen(str));
+				printf("Sent: %s\n", str);
 
 			}
+			else if(card2_x == -1) { // If this is the 2nd choice in a play.
+				card2_x = card_x_aux;
+				card2_y = card_y_aux;
+
+				memset(str, 0, sizeof(str));
+				code = -2;
+				sprintf(str, "%d-%d-%d\n", code, card2_x, card2_y);
+				write(fd, str, strlen(str));
+				printf("Sent: %s\n", str);
+
+			}
+			else // If the player has already made both his choices.
+				printf("Wait!\n\n");
+
+		}
 			
 	}
 
